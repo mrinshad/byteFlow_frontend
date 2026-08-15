@@ -3,8 +3,10 @@
 import React, { use, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Layers, History, BarChart3, Wifi, WifiOff } from 'lucide-react';
+import { ArrowLeft, Layers, History, BarChart3, Wifi, WifiOff, Eye, EyeOff } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
+import { useBoardStore } from '@/lib/store/use-board-store';
 import { useProjectSocket } from '@/lib/use-project-socket';
 import { Navbar } from '@/components/navbar';
 import { AuthGuard } from '@/components/auth-guard';
@@ -19,8 +21,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const projectId = resolvedParams.id;
+  const { user } = useAuth();
+  const { showDeleted, setShowDeleted } = useBoardStore();
   const [activityOpen, setActivityOpen] = useState(false);
   const [insightsOpen, setInsightsOpen] = useState(false);
+
+  const canManageCards = user?.role === 'ADMIN' || user?.role === 'MANAGER';
 
   // Connect project real-time socket room
   const { isConnected } = useProjectSocket(projectId);
@@ -124,6 +130,24 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                   <History className="h-3.5 w-3.5" />
                   <span>Activity</span>
                 </Button>
+
+                {/* Show/Hide Deleted Cards (for Managers & Admins) */}
+                {canManageCards && (
+                  <Button
+                    variant={showDeleted ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setShowDeleted(!showDeleted)}
+                    className={`gap-1.5 text-xs h-8 ${
+                      showDeleted
+                        ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-xs'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                    title={showDeleted ? 'Hide deleted cards' : 'Show deleted cards'}
+                  >
+                    {showDeleted ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                    <span>{showDeleted ? 'Hide Deleted' : 'Show Deleted'}</span>
+                  </Button>
+                )}
               </div>
             </div>
           )}

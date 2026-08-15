@@ -145,22 +145,22 @@ export function CommentSection({ cardId, projectId }: CommentSectionProps) {
             const initials = author.slice(0, 2).toUpperCase();
 
             return (
-              <div key={c.id} className="group flex gap-2.5 rounded-lg border border-border/40 bg-muted/20 p-3">
+              <div key={c.id} className="group flex gap-2.5 rounded-lg border border-border/40 bg-muted/20 p-3 max-w-full overflow-hidden">
                 {/* Avatar */}
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary ring-1 ring-primary/20">
                   {initials}
                 </span>
 
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 overflow-hidden">
                   {/* Header */}
                   <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-foreground">{author}</span>
-                      <span className="text-[10px] text-muted-foreground">{formatTimestamp(c.createdAt)}</span>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-xs font-medium text-foreground truncate">{author}</span>
+                      <span className="text-[10px] text-muted-foreground shrink-0">{formatTimestamp(c.createdAt)}</span>
                     </div>
 
                     {!isEditingThis && (
-                      <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                      <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 shrink-0">
                         <Button
                           variant="ghost"
                           size="icon-xs"
@@ -190,7 +190,7 @@ export function CommentSection({ cardId, projectId }: CommentSectionProps) {
                       <Textarea
                         value={editingText}
                         onChange={(e) => setEditingText(e.target.value)}
-                        className="min-h-[60px] text-xs resize-none"
+                        className="min-h-[60px] text-xs resize-none break-words"
                         autoFocus
                       />
                       <div className="flex items-center gap-1 justify-end">
@@ -218,7 +218,7 @@ export function CommentSection({ cardId, projectId }: CommentSectionProps) {
                       </div>
                     </div>
                   ) : (
-                    <p className="mt-1 text-xs text-foreground/90 whitespace-pre-wrap leading-relaxed">
+                    <p className="mt-1 text-xs text-foreground/90 whitespace-pre-wrap break-words leading-relaxed">
                       {c.comment}
                     </p>
                   )}

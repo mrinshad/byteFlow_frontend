@@ -38,7 +38,7 @@ export function LaneContainer({ projectId }: LaneContainerProps) {
   const [activeCard, setActiveCard] = useState<Card | null>(null);
   const queryClient = useQueryClient();
 
-  const { search, priority, tagId, assigneeId, dueDateFilter } = useBoardStore();
+  const { search, priority, tagId, assigneeId, dueDateFilter, showDeleted } = useBoardStore();
 
   const activeFilters = {
     search: search.trim() || undefined,
@@ -46,6 +46,7 @@ export function LaneContainer({ projectId }: LaneContainerProps) {
     tagId: tagId !== 'ALL' ? tagId : undefined,
     assigneeId: assigneeId !== 'ALL' ? assigneeId : undefined,
     dueDateFilter: dueDateFilter !== 'all' ? dueDateFilter : undefined,
+    includeDeleted: showDeleted || undefined,
   };
 
   const sensors = useSensors(

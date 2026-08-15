@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { MoreVertical, Layers, CheckSquare, Clock, Edit2, Trash2, ArrowUpRight } from 'lucide-react';
-import type { Project } from '@/lib/api';
+import type { Project, AuthUser } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -16,17 +16,20 @@ interface ProjectCardProps {
   project: Project;
   onEdit: (project: Project) => void;
   onDelete: (project: Project) => void;
+  currentUser?: AuthUser | null;
 }
 
-export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
+export function ProjectCard({ project, onEdit, onDelete, currentUser }: ProjectCardProps) {
   const lanesCount = project._count?.lanes ?? 0;
   const cardsCount = project._count?.cards ?? 0;
 
-  const formattedDate = new Date(project.updatedAt).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
+  const isAdmin = currentUser?.role === 'ADMIN';
+  const isCreator = project.createdBy === currentUser?.id;
+  const isManager = currentUser?.role === 'MANAGER';
+
+  const canEdit = isAdmin || isManager;
+  const canDelete = isAdmin || (isManager && isCreator);
+  const showMenu = canEdit || canDelete;
 
   return (
     <div className="group relative flex flex-col justify-between rounded-xl border border-border/60 bg-card p-5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-border hover:shadow-md">
@@ -39,33 +42,39 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
             <h3 className="line-clamp-1 text-base font-semibold">{project.name}</h3>
           </Link>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  className="h-8 w-8 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
-                />
-              }
-            >
-              <MoreVertical className="h-4 w-4" />
-              <span className="sr-only">Project options</span>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-36">
-              <DropdownMenuItem onClick={() => onEdit(project)} className="gap-2 cursor-pointer">
-                <Edit2 className="h-3.5 w-3.5" />
-                <span>Edit</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => onDelete(project)}
-                className="gap-2 text-destructive cursor-pointer focus:text-destructive"
+          {showMenu && (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    className="h-8 w-8 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
+                  />
+                }
               >
-                <Trash2 className="h-3.5 w-3.5" />
-                <span>Delete</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <MoreVertical className="h-4 w-4" />
+                <span className="sr-only">Project options</span>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-36">
+                {canEdit && (
+                  <DropdownMenuItem onClick={() => onEdit(project)} className="gap-2 cursor-pointer">
+                    <Edit2 className="h-3.5 w-3.5" />
+                    <span>Edit</span>
+                  </DropdownMenuItem>
+                )}
+                {canDelete && (
+                  <DropdownMenuItem
+                    onClick={() => onDelete(project)}
+                    className="gap-2 text-destructive cursor-pointer focus:text-destructive"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    <span>Delete</span>
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
 
         <p className="mt-2 line-clamp-2 min-h-[2.5rem] text-xs text-muted-foreground leading-relaxed">

@@ -15,6 +15,7 @@ interface BoardState {
   tagId: string | 'ALL';
   assigneeId: string | 'ALL';
   dueDateFilter: DueDateFilterOption;
+  showDeleted: boolean;
 
   openCardDrawer: (cardId: string) => void;
   closeCardDrawer: () => void;
@@ -25,6 +26,7 @@ interface BoardState {
   setTagId: (tagId: string | 'ALL') => void;
   setAssigneeId: (assigneeId: string | 'ALL') => void;
   setDueDateFilter: (filter: DueDateFilterOption) => void;
+  setShowDeleted: (showDeleted: boolean) => void;
   resetFilters: () => void;
 }
 
@@ -39,6 +41,7 @@ export const useBoardStore = create<BoardState>((set) => ({
   tagId: 'ALL',
   assigneeId: 'ALL',
   dueDateFilter: 'all',
+  showDeleted: false,
 
   openCardDrawer: (cardId: string) => set({ selectedCardId: cardId, isDrawerOpen: true }),
   closeCardDrawer: () => set({ selectedCardId: null, isDrawerOpen: false }),
@@ -49,6 +52,7 @@ export const useBoardStore = create<BoardState>((set) => ({
   setTagId: (tagId) => set({ tagId }),
   setAssigneeId: (assigneeId) => set({ assigneeId }),
   setDueDateFilter: (dueDateFilter) => set({ dueDateFilter }),
+  setShowDeleted: (showDeleted) => set({ showDeleted }),
   resetFilters: () =>
     set({
       search: '',
@@ -56,5 +60,6 @@ export const useBoardStore = create<BoardState>((set) => ({
       tagId: 'ALL',
       assigneeId: 'ALL',
       dueDateFilter: 'all',
+      showDeleted: false,
     }),
 }));

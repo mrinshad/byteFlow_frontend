@@ -219,7 +219,7 @@ export function ActivityTimeline({ cardId, projectId, limit = 50 }: ActivityTime
 
             {/* Content */}
             <div className="flex-1 min-w-0 pt-0.5">
-              <div className="leading-snug">
+              <div className="leading-snug break-words">
                 <span className="font-semibold text-foreground mr-1.5">{performer}</span>
                 {renderActionContent(act)}
               </div>

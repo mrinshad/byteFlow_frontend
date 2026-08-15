@@ -214,6 +214,13 @@ export const api = {
     me: async (): Promise<{ success: boolean; data: AuthUser }> => {
       return request<{ success: boolean; data: AuthUser }>('/api/auth/me');
     },
+
+    changePassword: async (data: { currentPassword: string; newPassword: string }): Promise<{ success: boolean; message: string }> => {
+      return request<{ success: boolean; message: string }>('/api/auth/change-password', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
   },
 
   projects: {
@@ -296,6 +303,7 @@ export const api = {
         fromDate?: string;
         toDate?: string;
         search?: string;
+        includeDeleted?: boolean;
       }
     ): Promise<{ success: boolean; data: Card[] }> => {
       const searchParams = new URLSearchParams();
@@ -307,6 +315,7 @@ export const api = {
       if (filters?.fromDate) searchParams.set('fromDate', filters.fromDate);
       if (filters?.toDate) searchParams.set('toDate', filters.toDate);
       if (filters?.search) searchParams.set('search', filters.search);
+      if (filters?.includeDeleted) searchParams.set('includeDeleted', 'true');
       const query = searchParams.toString() ? `?${searchParams.toString()}` : '';
       return request<{ success: boolean; data: Card[] }>(`/api/cards/project/${projectId}${query}`);
     },
@@ -346,6 +355,12 @@ export const api = {
     delete: async (id: string): Promise<{ success: boolean; message: string }> => {
       return request<{ success: boolean; message: string }>(`/api/cards/${id}`, {
         method: 'DELETE',
+      });
+    },
+
+    restore: async (id: string): Promise<{ success: boolean; data: Card }> => {
+      return request<{ success: boolean; data: Card }>(`/api/cards/${id}/restore`, {
+        method: 'POST',
       });
     },
   },
@@ -461,6 +476,13 @@ export const api = {
       return request<{ success: boolean; data: AuthUser }>(`/api/admin/users/${userId}/role`, {
         method: 'PATCH',
         body: JSON.stringify({ role }),
+      });
+    },
+
+    resetPassword: async (userId: string, password: string): Promise<{ success: boolean; message: string }> => {
+      return request<{ success: boolean; message: string }>(`/api/admin/users/${userId}/reset-password`, {
+        method: 'POST',
+        body: JSON.stringify({ password }),
       });
     },
   },

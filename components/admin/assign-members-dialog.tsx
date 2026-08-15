@@ -146,7 +146,15 @@ export function AssignMembersDialog({
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                    <span
+                      className={`rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
+                        user.role === 'ADMIN'
+                          ? 'bg-primary text-primary-foreground'
+                          : user.role === 'MANAGER'
+                          ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 font-semibold'
+                          : 'bg-muted text-muted-foreground'
+                      }`}
+                    >
                       {user.role}
                     </span>
                     <div

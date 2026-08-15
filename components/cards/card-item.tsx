@@ -3,10 +3,13 @@
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Calendar, MessageSquare } from 'lucide-react';
-import type { Card, Priority } from '@/lib/api';
+import { Calendar, MessageSquare, RotateCcw } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { api, type Card, type Priority } from '@/lib/api';
 import { useBoardStore } from '@/lib/store/use-board-store';
 import { TagBadge } from '@/components/tags/tag-badge';
+import { Button } from '@/components/ui/button';
 
 interface CardItemProps {
   card: Card;
@@ -44,6 +47,21 @@ const PRIORITY_CONFIG: Record<
 
 export function CardItem({ card }: CardItemProps) {
   const openCardDrawer = useBoardStore((state) => state.openCardDrawer);
+  const queryClient = useQueryClient();
+
+  const isDeleted = !!card.deletedAt;
+
+  const restoreMutation = useMutation({
+    mutationFn: () => api.cards.restore(card.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cards', card.projectId] });
+      queryClient.invalidateQueries({ queryKey: ['lanes', card.projectId] });
+      toast.success('Card restored successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to restore card');
+    },
+  });
 
   const {
     attributes,
@@ -54,6 +72,7 @@ export function CardItem({ card }: CardItemProps) {
     isDragging,
   } = useSortable({
     id: card.id,
+    disabled: isDeleted,
     data: {
       type: 'Card',
       card,
@@ -88,23 +107,63 @@ export function CardItem({ card }: CardItemProps) {
       {...attributes}
       {...listeners}
       onClick={() => openCardDrawer(card.id)}
-      className={`group relative flex flex-col gap-2 rounded-lg border border-border/70 bg-card p-3 shadow-xs transition-all duration-150 hover:border-border hover:shadow-sm cursor-pointer select-none ${
-        isDragging ? 'opacity-30 ring-2 ring-primary/50' : ''
-      }`}
+      className={`group relative flex flex-col gap-2 rounded-lg border p-3 shadow-xs transition-all duration-150 cursor-pointer select-none ${
+        isDeleted
+          ? 'border-dashed border-destructive/40 bg-muted/40 opacity-75'
+          : 'border-border/70 bg-card hover:border-border hover:shadow-sm'
+      } ${isDragging ? 'opacity-30 ring-2 ring-primary/50' : ''}`}
     >
-      {/* Tag Badges */}
-      {tags.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1">
-          {tags.map((tag) => (
-            <TagBadge key={tag.id} tag={tag} size="xs" />
-          ))}
-        </div>
-      )}
+      {/* Header: Deleted Banner or Tag Badges */}
+      <div className="flex items-center justify-between gap-1.5 flex-wrap">
+        {isDeleted ? (
+          <span className="rounded bg-rose-500/10 px-1.5 py-0.5 text-[9px] font-bold text-rose-500 uppercase tracking-wider border border-rose-500/20">
+            Deleted / Archived
+          </span>
+        ) : (
+          tags.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1">
+              {tags.map((tag) => (
+                <TagBadge key={tag.id} tag={tag} size="xs" />
+              ))}
+            </div>
+          )
+        )}
+
+        {isDeleted && (
+          <Button
+            size="icon-xs"
+            variant="ghost"
+            onClick={(e) => {
+              e.stopPropagation();
+              restoreMutation.mutate();
+            }}
+            disabled={restoreMutation.isPending}
+            className="h-5 px-1.5 gap-1 text-[10px] font-semibold text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+            title="Restore deleted card"
+          >
+            <RotateCcw className="h-3 w-3" />
+            <span>Restore</span>
+          </Button>
+        )}
+      </div>
 
       {/* Title */}
-      <h4 className="text-xs font-medium text-foreground leading-snug line-clamp-3 group-hover:text-primary transition-colors">
+      <h4
+        className={`text-xs font-medium leading-snug line-clamp-3 transition-colors ${
+          isDeleted
+            ? 'line-through text-muted-foreground'
+            : 'text-foreground group-hover:text-primary'
+        }`}
+      >
         {card.title}
       </h4>
+
+      {/* Description Preview */}
+      {card.description && (
+        <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed whitespace-pre-wrap break-words">
+          {card.description}
+        </p>
+      )}
 
       {/* Metadata Badges Footer */}
       <div className="flex flex-wrap items-center justify-between gap-1.5 pt-0.5 text-[11px]">

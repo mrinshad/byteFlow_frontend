@@ -16,6 +16,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
+import { useAuth } from '@/lib/auth-context';
+
 interface EditProjectDialogProps {
   project: Project | null;
   open: boolean;
@@ -27,6 +29,7 @@ export function EditProjectDialog({
   open,
   onOpenChange,
 }: EditProjectDialogProps) {
+  const { user } = useAuth();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const queryClient = useQueryClient();
@@ -58,6 +61,10 @@ export function EditProjectDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (user?.role === 'MEMBER') {
+      toast.error('Members do not have permission to edit projects');
+      return;
+    }
     if (!name.trim()) {
       toast.error('Project name is required');
       return;

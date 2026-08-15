@@ -14,6 +14,8 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
+import { useAuth } from '@/lib/auth-context';
+
 interface DeleteProjectDialogProps {
   project: Project | null;
   open: boolean;
@@ -27,11 +29,18 @@ export function DeleteProjectDialog({
   onOpenChange,
   onSuccess,
 }: DeleteProjectDialogProps) {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const deleteMutation = useMutation({
     mutationFn: () => {
       if (!project) throw new Error('No project selected');
+      if (user?.role === 'MEMBER') {
+        throw new Error('Members do not have permission to delete projects');
+      }
+      if (user?.role === 'MANAGER' && project.createdBy !== user.id) {
+        throw new Error('Managers can only delete projects they created');
+      }
       return api.projects.delete(project.id);
     },
     onSuccess: () => {

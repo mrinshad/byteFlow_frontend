@@ -16,6 +16,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
+import { useAuth } from '@/lib/auth-context';
+
 interface CreateProjectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -27,6 +29,7 @@ export function CreateProjectDialog({
   onOpenChange,
   onSuccess,
 }: CreateProjectDialogProps) {
+  const { user } = useAuth();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const queryClient = useQueryClient();
@@ -51,6 +54,10 @@ export function CreateProjectDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (user?.role === 'MEMBER') {
+      toast.error('Members do not have permission to create projects');
+      return;
+    }
     if (!name.trim()) {
       toast.error('Project name is required');
       return;
