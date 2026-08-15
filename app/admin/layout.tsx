@@ -45,8 +45,8 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   // Sidebar collapsed by default
   const [collapsed, setCollapsed] = useState(true);
 
-  // If user is not an ADMIN, show access denied
-  if (user?.role !== 'ADMIN') {
+  // If user is not an ADMIN or SUPER_ADMIN, show access denied
+  if (user?.role !== 'ADMIN' && user?.role !== 'SUPER_ADMIN') {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10 text-destructive mb-4 shadow-xs">

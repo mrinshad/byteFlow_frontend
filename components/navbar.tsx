@@ -26,7 +26,7 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-2">
-          {isAuthenticated && user?.role === 'ADMIN' && (
+          {isAuthenticated && (user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') && (
             <Link href="/admin">
               <Button
                 size="sm"

@@ -16,7 +16,8 @@ import {
   RotateCcw,
   Eye,
   EyeOff,
-  UserX,
+  Shield,
+  Crown,
 } from 'lucide-react';
 import { api, type Role, type AdminUser } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
@@ -31,6 +32,8 @@ export default function AdminUsersPage() {
   const [search, setSearch] = useState('');
   const [showDeactivated, setShowDeactivated] = useState(false);
   const [resetUser, setResetUser] = useState<AdminUser | null>(null);
+
+  const isSuperAdmin = currentUser?.role === 'SUPER_ADMIN';
 
   const { data: usersData, isLoading } = useQuery({
     queryKey: ['admin', 'users', { includeDeleted: true }],
@@ -104,7 +107,15 @@ export default function AdminUsersPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-6 border-b border-border/40">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">User Directory & Governance</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">User Directory & Governance</h1>
+            {isSuperAdmin && (
+              <span className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+                <Crown className="h-3 w-3" />
+                Super Admin Access
+              </span>
+            )}
+          </div>
           <p className="mt-1 text-xs text-muted-foreground">
             Manage user accounts, assign permission roles, lock/unlock access, and inspect project allocations.
           </p>
@@ -183,6 +194,9 @@ export default function AdminUsersPage() {
               ) : (
                 filteredUsers.map((user) => {
                   const isSelf = user.id === currentUser?.id;
+                  const isTargetAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+                  const canManageTarget = isSuperAdmin || (!isTargetAdmin && !isSelf);
+
                   return (
                     <tr
                       key={user.id}
@@ -197,7 +211,13 @@ export default function AdminUsersPage() {
                       {/* Name & Avatar */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold shrink-0 ring-1 ring-primary/20">
+                          <div
+                            className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold shrink-0 ring-1 ${
+                              user.role === 'SUPER_ADMIN'
+                                ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 ring-purple-500/20'
+                                : 'bg-primary/10 text-primary ring-primary/20'
+                            }`}
+                          >
                             {user.name.charAt(0).toUpperCase()}
                           </div>
                           <div>
@@ -240,13 +260,16 @@ export default function AdminUsersPage() {
                       <td className="px-4 py-4">
                         <span
                           className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                            user.role === 'ADMIN'
+                            user.role === 'SUPER_ADMIN'
+                              ? 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/20'
+                              : user.role === 'ADMIN'
                               ? 'bg-primary text-primary-foreground'
                               : user.role === 'MANAGER'
                               ? 'bg-blue-500/15 text-blue-600 dark:text-blue-400 font-semibold'
                               : 'bg-muted text-muted-foreground'
                           }`}
                         >
+                          {user.role === 'SUPER_ADMIN' && <Crown className="h-3 w-3" />}
                           {user.role}
                         </span>
                       </td>
@@ -290,8 +313,9 @@ export default function AdminUsersPage() {
                               size="xs"
                               variant="outline"
                               onClick={() => restoreMutation.mutate(user.id)}
-                              disabled={restoreMutation.isPending}
-                              className="gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10 cursor-pointer"
+                              disabled={restoreMutation.isPending || (!isSuperAdmin && user.role === 'ADMIN')}
+                              className="gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10 cursor-pointer disabled:opacity-40"
+                              title={!isSuperAdmin && user.role === 'ADMIN' ? 'Only Super Admin can restore Administrators' : 'Restore user'}
                             >
                               <RotateCcw className="h-3 w-3" />
                               <span>Restore User</span>
@@ -299,7 +323,7 @@ export default function AdminUsersPage() {
                           ) : (
                             <>
                               {/* Lock / Unlock Toggle Button */}
-                              {!isSelf && (
+                              {!isSelf && user.role !== 'SUPER_ADMIN' && (
                                 <Button
                                   size="icon-xs"
                                   variant="ghost"
@@ -309,13 +333,19 @@ export default function AdminUsersPage() {
                                       isLocked: !user.isLocked,
                                     })
                                   }
-                                  disabled={lockMutation.isPending}
-                                  className={`h-8 w-8 cursor-pointer ${
+                                  disabled={lockMutation.isPending || (!isSuperAdmin && user.role === 'ADMIN')}
+                                  className={`h-8 w-8 cursor-pointer disabled:opacity-40 ${
                                     user.isLocked
                                       ? 'text-amber-600 dark:text-amber-400 hover:bg-amber-500/10'
                                       : 'text-muted-foreground hover:text-foreground'
                                   }`}
-                                  title={user.isLocked ? 'Unlock account' : 'Lock account'}
+                                  title={
+                                    !isSuperAdmin && user.role === 'ADMIN'
+                                      ? 'Only Super Admin can lock/unlock Administrators'
+                                      : user.isLocked
+                                      ? 'Unlock account'
+                                      : 'Lock account'
+                                  }
                                 >
                                   {user.isLocked ? (
                                     <Lock className="h-3.5 w-3.5" />
@@ -330,8 +360,13 @@ export default function AdminUsersPage() {
                                 size="xs"
                                 variant="outline"
                                 onClick={() => setResetUser(user)}
-                                className="h-8 gap-1.5 text-xs font-semibold cursor-pointer"
-                                title="Reset password for this user"
+                                disabled={!isSuperAdmin && isTargetAdmin && !isSelf}
+                                className="h-8 gap-1.5 text-xs font-semibold cursor-pointer disabled:opacity-40"
+                                title={
+                                  !isSuperAdmin && isTargetAdmin && !isSelf
+                                    ? 'Only Super Admin can reset password of Administrators'
+                                    : 'Reset password for this user'
+                                }
                               >
                                 <KeyRound className="h-3.5 w-3.5 text-muted-foreground" />
                                 <span className="hidden sm:inline">Reset</span>
@@ -346,17 +381,39 @@ export default function AdminUsersPage() {
                                     role: e.target.value as Role,
                                   })
                                 }
-                                disabled={updateRoleMutation.isPending || isSelf}
-                                className="h-8 rounded-lg border border-border/60 bg-background px-2 text-xs font-semibold text-foreground shadow-2xs focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                                title={isSelf ? 'You cannot change your own role' : 'Change user role'}
+                                disabled={
+                                  updateRoleMutation.isPending ||
+                                  isSelf ||
+                                  (!isSuperAdmin && isTargetAdmin)
+                                }
+                                className="h-8 rounded-lg border border-border/60 bg-background px-2 text-xs font-semibold text-foreground shadow-2xs focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                                title={
+                                  isSelf
+                                    ? 'You cannot change your own role'
+                                    : !isSuperAdmin && isTargetAdmin
+                                    ? 'Only Super Admin can change Administrator roles'
+                                    : 'Change user role'
+                                }
                               >
-                                <option value="ADMIN">ADMIN</option>
-                                <option value="MANAGER">MANAGER</option>
-                                <option value="MEMBER">MEMBER</option>
+                                {isSuperAdmin ? (
+                                  <>
+                                    <option value="SUPER_ADMIN">SUPER ADMIN</option>
+                                    <option value="ADMIN">ADMIN</option>
+                                    <option value="MANAGER">MANAGER</option>
+                                    <option value="MEMBER">MEMBER</option>
+                                  </>
+                                ) : isTargetAdmin ? (
+                                  <option value={user.role}>{user.role}</option>
+                                ) : (
+                                  <>
+                                    <option value="MANAGER">MANAGER</option>
+                                    <option value="MEMBER">MEMBER</option>
+                                  </>
+                                )}
                               </select>
 
                               {/* Deactivate User Button */}
-                              {!isSelf && (
+                              {!isSelf && user.role !== 'SUPER_ADMIN' && (
                                 <Button
                                   size="icon-xs"
                                   variant="ghost"
@@ -365,9 +422,13 @@ export default function AdminUsersPage() {
                                       deleteMutation.mutate(user.id);
                                     }
                                   }}
-                                  disabled={deleteMutation.isPending}
-                                  className="h-8 w-8 text-muted-foreground hover:text-destructive cursor-pointer"
-                                  title="Deactivate User"
+                                  disabled={deleteMutation.isPending || (!isSuperAdmin && user.role === 'ADMIN')}
+                                  className="h-8 w-8 text-muted-foreground hover:text-destructive cursor-pointer disabled:opacity-40"
+                                  title={
+                                    !isSuperAdmin && user.role === 'ADMIN'
+                                      ? 'Only Super Admin can deactivate Administrators'
+                                      : 'Deactivate User'
+                                  }
                                 >
                                   <Trash2 className="h-3.5 w-3.5" />
                                 </Button>

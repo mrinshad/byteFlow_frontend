@@ -1,7 +1,7 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export type Priority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-export type Role = 'ADMIN' | 'MANAGER' | 'MEMBER';
+export type Role = 'SUPER_ADMIN' | 'ADMIN' | 'MANAGER' | 'MEMBER';
 export type NotificationType =
   | 'MENTION'
   | 'ASSIGNED_TO_PROJECT'

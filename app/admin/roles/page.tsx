@@ -8,15 +8,39 @@ import {
   Shield,
   Briefcase,
   User,
-  Lock,
-  Sparkles,
+  Crown,
 } from 'lucide-react';
 
 export default function AdminRolesPage() {
   const permissions = [
     {
+      name: 'Manage, Lock & Reset Other Administrators',
+      description: 'Supreme governance over administrator accounts and platform hierarchy',
+      superAdmin: true,
+      admin: false,
+      manager: false,
+      member: false,
+    },
+    {
+      name: 'Promote / Assign Administrator Roles',
+      description: 'Elevate users to Admin or Super Admin status',
+      superAdmin: true,
+      admin: false,
+      manager: false,
+      member: false,
+    },
+    {
       name: 'Access Admin Management Portal',
       description: 'View executive analytics, reports, and administrative management tools',
+      superAdmin: true,
+      admin: true,
+      manager: false,
+      member: false,
+    },
+    {
+      name: 'Manage, Lock & Reset Team Members / Managers',
+      description: 'User management and credential resets for lower tier roles',
+      superAdmin: true,
       admin: true,
       manager: false,
       member: false,
@@ -24,13 +48,7 @@ export default function AdminRolesPage() {
     {
       name: 'Assign Users to Projects',
       description: 'Allocate and manage which team members have access to each project',
-      admin: true,
-      manager: false,
-      member: false,
-    },
-    {
-      name: 'Promote / Demote User Roles',
-      description: 'Change user roles between Admin, Manager, and Member',
+      superAdmin: true,
       admin: true,
       manager: false,
       member: false,
@@ -38,6 +56,7 @@ export default function AdminRolesPage() {
     {
       name: 'Create New Projects',
       description: 'Initiate new Kanban boards with default workflow lanes',
+      superAdmin: true,
       admin: true,
       manager: true,
       member: false,
@@ -45,6 +64,7 @@ export default function AdminRolesPage() {
     {
       name: 'Edit & Alter Project Details',
       description: 'Rename projects, update descriptions, and alter project configurations',
+      superAdmin: true,
       admin: true,
       manager: true,
       member: false,
@@ -52,13 +72,15 @@ export default function AdminRolesPage() {
     {
       name: 'Delete / Archive Projects',
       description: 'Soft-delete projects and remove boards from workspace',
+      superAdmin: true,
       admin: true,
-      manager: true, // For own projects
+      manager: true,
       member: false,
     },
     {
       name: 'Manage Cards & Move Workflow Lanes',
       description: 'Create tasks, drag cards across lanes, set priorities, and due dates',
+      superAdmin: true,
       admin: true,
       manager: true,
       member: true,
@@ -66,6 +88,7 @@ export default function AdminRolesPage() {
     {
       name: 'Post Comments & Tag Tasks',
       description: 'Collaborate with team members, add comments, and categorize with tags',
+      superAdmin: true,
       admin: true,
       manager: true,
       member: true,
@@ -83,36 +106,55 @@ export default function AdminRolesPage() {
       </div>
 
       {/* Role Cards */}
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Super Admin Card */}
+        <div className="rounded-xl border border-purple-500/40 bg-card p-5 shadow-xs relative overflow-hidden">
+          <div className="absolute top-0 right-0 h-16 w-16 bg-purple-500/5 rounded-bl-full pointer-events-none" />
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400">
+              <Crown className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-foreground">SUPER ADMIN</h2>
+              <span className="text-[10px] font-semibold text-purple-600 dark:text-purple-400 uppercase">Supreme Authority</span>
+            </div>
+          </div>
+          <p className="mt-3 text-xs text-muted-foreground leading-relaxed">
+            Highest tier governance. Full control over the entire system, including the ability to manage, lock, delete, and reset passwords for other Administrators.
+          </p>
+          <div className="mt-4 pt-3 border-t border-border/40 text-[11px] text-purple-600 dark:text-purple-400 font-semibold">
+            Key: Supreme Control • Admin Governance • Platform Hierarchy
+          </div>
+        </div>
+
         {/* Admin Card */}
         <div className="rounded-xl border border-primary/40 bg-card p-5 shadow-xs relative overflow-hidden">
-          <div className="absolute top-0 right-0 h-16 w-16 bg-primary/5 rounded-bl-full pointer-events-none" />
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div>
               <h2 className="text-sm font-bold text-foreground">ADMIN</h2>
-              <span className="text-[10px] font-semibold text-primary uppercase">Full System Authority</span>
+              <span className="text-[10px] font-semibold text-primary uppercase">Workspace Authority</span>
             </div>
           </div>
           <p className="mt-3 text-xs text-muted-foreground leading-relaxed">
-            Full administrative access. Governs the Admin Portal, manages user accounts, allocates members to projects, and oversees workspace reports.
+            Workspace administration. Manages projects and team allocations, but cannot reset passwords, lock, or alter other Administrators.
           </p>
           <div className="mt-4 pt-3 border-t border-border/40 text-[11px] text-foreground font-semibold">
-            Key: User Management • Member Assignments • System Reports
+            Key: Team Management • Project Allocation • Reports
           </div>
         </div>
 
         {/* Manager Card */}
         <div className="rounded-xl border border-border/60 bg-card p-5 shadow-xs">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
               <Briefcase className="h-5 w-5" />
             </div>
             <div>
               <h2 className="text-sm font-bold text-foreground">MANAGER</h2>
-              <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 uppercase">Project Lead</span>
+              <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 uppercase">Project Lead</span>
             </div>
           </div>
           <p className="mt-3 text-xs text-muted-foreground leading-relaxed">
@@ -147,14 +189,15 @@ export default function AdminRolesPage() {
       <div className="rounded-xl border border-border/60 bg-card shadow-xs overflow-hidden">
         <div className="border-b border-border/40 px-6 py-4">
           <h2 className="text-sm font-bold text-foreground">Access Rights & Permissions Table</h2>
-          <p className="text-xs text-muted-foreground">Cross-role permission breakdown enforced by backend middleware</p>
+          <p className="text-xs text-muted-foreground">Cross-role permission breakdown enforced by backend middleware and services</p>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="border-b border-border/40 bg-muted/40 text-muted-foreground font-semibold uppercase tracking-wider text-[10px]">
               <tr>
-                <th className="px-6 py-3.5 w-1/2">Capability / Operation</th>
+                <th className="px-6 py-3.5 w-2/5">Capability / Operation</th>
+                <th className="px-4 py-3.5 text-center text-purple-600 dark:text-purple-400">SUPER ADMIN</th>
                 <th className="px-4 py-3.5 text-center">ADMIN</th>
                 <th className="px-4 py-3.5 text-center">MANAGER</th>
                 <th className="px-4 py-3.5 text-center">MEMBER</th>
@@ -166,6 +209,19 @@ export default function AdminRolesPage() {
                   <td className="px-6 py-4">
                     <div className="font-bold text-foreground text-xs">{perm.name}</div>
                     <p className="text-[11px] text-muted-foreground mt-0.5">{perm.description}</p>
+                  </td>
+
+                  {/* Super Admin */}
+                  <td className="px-4 py-4 text-center">
+                    {perm.superAdmin ? (
+                      <div className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400">
+                        <Check className="h-3.5 w-3.5" />
+                      </div>
+                    ) : (
+                      <div className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-muted text-muted-foreground/40">
+                        <X className="h-3.5 w-3.5" />
+                      </div>
+                    )}
                   </td>
 
                   {/* Admin */}

@@ -45,10 +45,15 @@ export const ROLE_CONFIG: Record<
   Role,
   { label: string; badge: string; description: string }
 > = {
+  SUPER_ADMIN: {
+    label: 'Super Admin',
+    badge: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
+    description: 'Supreme platform control with unrestricted user and admin governance',
+  },
   ADMIN: {
     label: 'Administrator',
     badge: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20',
-    description: 'Full workspace and system governance',
+    description: 'Workspace and project administration (restricted from modifying other admins)',
   },
   MANAGER: {
     label: 'Project Manager',
