@@ -17,8 +17,7 @@ import {
   LayoutGrid,
   ChevronLeft,
   ChevronRight,
-  PanelLeftClose,
-  PanelLeftOpen,
+  ArrowRight,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { AuthGuard } from '@/components/auth-guard';
@@ -67,25 +66,29 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
 
   const navItems = [
     {
-      label: 'Dashboard & Reports',
+      label: 'Dashboard',
+      shortLabel: 'Dashboard',
       href: '/admin',
       icon: TrendingUp,
       active: pathname === '/admin',
     },
     {
-      label: 'Projects & Assignments',
+      label: 'Projects',
+      shortLabel: 'Projects',
       href: '/admin/projects',
       icon: FolderKanban,
       active: pathname === '/admin/projects',
     },
     {
-      label: 'Users & Allocations',
+      label: 'Users',
+      shortLabel: 'Users',
       href: '/admin/users',
       icon: Users,
       active: pathname === '/admin/users',
     },
     {
-      label: 'Roles & Permissions',
+      label: 'Roles',
+      shortLabel: 'Roles',
       href: '/admin/roles',
       icon: ShieldCheck,
       active: pathname === '/admin/roles',
@@ -94,125 +97,111 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
-      {/* Static Collapsible Admin Sidebar */}
+      {/* Sidebar */}
       <aside
-        className={`sticky top-0 h-screen shrink-0 border-r border-border/50 bg-card/60 flex flex-col justify-between hidden md:flex transition-all duration-300 ease-in-out z-40 relative ${
-          collapsed ? 'w-20' : 'w-64'
+        className={`sticky top-0 h-screen shrink-0 border-r border-border/40 bg-card/40 flex-col justify-between hidden md:flex transition-all duration-300 ease-in-out z-40 relative ${
+          collapsed ? 'w-[68px]' : 'w-60'
         }`}
       >
-        {/* Floating Vertical Center Collapse/Expand Toggle */}
+        {/* Collapse Toggle */}
         <button
           type="button"
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute -right-3 top-1/2 -translate-y-1/2 z-50 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-card shadow-xs hover:bg-muted text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+          className="absolute -right-3 top-1/2 -translate-y-1/2 z-50 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-background shadow-sm hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {collapsed ? (
-            <ChevronRight className="h-3.5 w-3.5" />
+            <ChevronRight className="h-3 w-3" />
           ) : (
-            <ChevronLeft className="h-3.5 w-3.5" />
+            <ChevronLeft className="h-3 w-3" />
           )}
         </button>
 
-        <div className="overflow-y-auto flex-1">
-          {/* Sidebar Header */}
-          <div className="h-14 flex items-center px-4 border-b border-border/40">
-            {!collapsed ? (
-              <Link href="/admin" className="flex items-center gap-2.5 min-w-0">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-xs">
-                  <Layers className="h-4 w-4" />
-                </div>
+        {/* Top: Logo + Nav */}
+        <div className="flex flex-col flex-1 min-h-0">
+          {/* Logo */}
+          <div className={`h-14 flex items-center border-b border-border/40 ${collapsed ? 'justify-center px-2' : 'px-4'}`}>
+            <Link href="/admin" className="flex items-center gap-2.5 min-w-0" title="ByteFlow Admin">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+                <Layers className="h-4 w-4" />
+              </div>
+              {!collapsed && (
                 <div className="flex flex-col min-w-0">
                   <span className="text-sm font-bold tracking-tight text-foreground leading-none truncate">ByteFlow</span>
-                  <span className="text-[10px] font-bold text-primary uppercase tracking-wider mt-0.5">Admin Portal</span>
+                  <span className="text-[10px] font-semibold text-primary mt-0.5">Admin</span>
                 </div>
-              </Link>
-            ) : (
-              <Link href="/admin" className="mx-auto" title="ByteFlow Admin Portal">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-xs">
-                  <Layers className="h-4 w-4" />
-                </div>
-              </Link>
-            )}
+              )}
+            </Link>
           </div>
 
-          {/* Navigation Links */}
-          <div className="p-3 space-y-1.5">
-            {!collapsed && (
-              <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
-                Management
-              </div>
-            )}
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  title={collapsed ? item.label : undefined}
-                  className={`flex items-center gap-3 rounded-lg py-2.5 text-xs font-semibold transition-all ${
-                    collapsed ? 'justify-center px-2' : 'px-3'
-                  } ${
-                    item.active
-                      ? 'bg-primary text-primary-foreground shadow-xs font-bold'
-                      : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
-                  }`}
-                >
-                  <Icon className="h-4 w-4 shrink-0" />
-                  {!collapsed && <span className="truncate">{item.label}</span>}
-                </Link>
-              );
-            })}
-          </div>
+          {/* Navigation */}
+          <nav className="flex-1 overflow-y-auto px-3 py-4">
+            <div className="space-y-1">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    title={collapsed ? item.label : undefined}
+                    className={`group flex items-center rounded-lg transition-colors ${
+                      collapsed ? 'justify-center h-10 w-10 mx-auto' : 'gap-3 px-3 h-9'
+                    } ${
+                      item.active
+                        ? 'bg-primary/10 text-primary font-semibold'
+                        : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+                    }`}
+                  >
+                    <Icon className={`shrink-0 ${collapsed ? 'h-4.5 w-4.5' : 'h-4 w-4'}`} />
+                    {!collapsed && <span className="text-[13px] truncate">{item.label}</span>}
+                  </Link>
+                );
+              })}
+            </div>
+          </nav>
         </div>
 
-        {/* Sidebar Footer */}
-        <div className="p-3 border-t border-border/40 space-y-2">
-          {/* Switch to User Portal Button */}
+        {/* Bottom: Portal Switch + User */}
+        <div className={`border-t border-border/40 ${collapsed ? 'px-2 py-3' : 'px-3 py-3'} space-y-3`}>
+          {/* Switch to User Portal */}
           <Link
             href="/projects"
-            title={collapsed ? 'Switch to User Portal (Kanban Boards)' : undefined}
-            className={`flex items-center rounded-lg border border-border/50 bg-muted/30 py-2 text-xs font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all group ${
-              collapsed ? 'justify-center px-2' : 'justify-between px-3'
+            title={collapsed ? 'Kanban Boards' : undefined}
+            className={`flex items-center rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors ${
+              collapsed ? 'justify-center h-10 w-10 mx-auto' : 'gap-2.5 px-3 h-9'
             }`}
           >
-            <div className="flex items-center gap-2 min-w-0">
-              <LayoutGrid className="h-4 w-4 text-primary shrink-0" />
-              {!collapsed && <span className="truncate font-medium">User Portal (Boards)</span>}
-            </div>
+            <LayoutGrid className="h-4 w-4 shrink-0" />
             {!collapsed && (
-              <ArrowLeft className="h-3.5 w-3.5 rotate-180 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+              <>
+                <span className="truncate flex-1">Kanban Boards</span>
+                <ArrowRight className="h-3 w-3 text-muted-foreground/50" />
+              </>
             )}
           </Link>
 
-          {/* User Info */}
-          {!collapsed ? (
-            <div className="flex items-center gap-2.5 px-2 py-1 min-w-0">
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold">
-                {user.name.charAt(0).toUpperCase()}
-              </div>
-              <div className="min-w-0">
+          {/* User */}
+          <div className={`flex items-center rounded-lg ${collapsed ? 'justify-center' : 'gap-2.5 px-3'} py-1.5`}>
+            <div
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/8 text-primary text-xs font-bold ring-1 ring-primary/15"
+              title={collapsed ? `${user.name} (@${user.username})` : undefined}
+            >
+              {user.name.charAt(0).toUpperCase()}
+            </div>
+            {!collapsed && (
+              <div className="min-w-0 flex-1">
                 <p className="truncate text-xs font-semibold text-foreground leading-tight">{user.name}</p>
-                <p className="truncate text-[10px] text-muted-foreground">@{user.username}</p>
+                <p className="truncate text-[10px] text-muted-foreground leading-tight">@{user.username}</p>
               </div>
-            </div>
-          ) : (
-            <div className="flex justify-center py-1">
-              <div
-                className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold"
-                title={`${user.name} (@${user.username})`}
-              >
-                {user.name.charAt(0).toUpperCase()}
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </aside>
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Uniform Top Header */}
+        {/* Top Header */}
         <header className="sticky top-0 z-30 h-14 border-b border-border/40 bg-background/80 backdrop-blur-md flex items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-3">
             {/* Mobile Logo */}
@@ -223,8 +212,8 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
               <span className="text-xs font-bold uppercase text-primary">Admin</span>
             </Link>
 
-            <span className="text-xs font-semibold text-muted-foreground hidden sm:inline">
-              Admin Management Console
+            <span className="text-xs font-medium text-muted-foreground hidden sm:inline">
+              Admin Console
             </span>
           </div>
 
@@ -244,7 +233,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
             {/* Notifications Popover */}
             <NotificationsPopover />
 
-            {/* Uniform Theme Toggle */}
+            {/* Theme Toggle */}
             <Button
               variant="ghost"
               size="icon"
@@ -256,7 +245,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
               <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
             </Button>
 
-            {/* Dedicated Account Menu */}
+            {/* Account Menu */}
             <AccountMenu />
           </div>
         </header>
@@ -273,7 +262,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              {item.label}
+              {item.shortLabel}
             </Link>
           ))}
         </div>
