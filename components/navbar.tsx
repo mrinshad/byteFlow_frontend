@@ -7,6 +7,7 @@ import { Layers, Moon, Sun, ShieldCheck, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth-context';
 import { AccountMenu } from '@/components/account-menu';
+import { NotificationsPopover } from '@/components/notifications-popover';
 
 export function Navbar() {
   const { theme, setTheme } = useTheme();
@@ -38,6 +39,8 @@ export function Navbar() {
               </Button>
             </Link>
           )}
+
+          {isAuthenticated && <NotificationsPopover />}
 
           <Button
             variant="ghost"

@@ -134,3 +134,41 @@ export function useProjectSocket(projectId: string | undefined) {
 
   return { isConnected };
 }
+
+export function useUserNotificationsSocket(userId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!userId) return;
+
+    const socket = getSocket();
+
+    const onConnect = () => {
+      socket.emit('join:user', userId);
+    };
+
+    if (socket.connected) {
+      socket.emit('join:user', userId);
+    }
+
+    socket.on('connect', onConnect);
+
+    const onNotificationChange = () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'] });
+    };
+
+    socket.on('notification:new', onNotificationChange);
+    socket.on('notification:read', onNotificationChange);
+    socket.on('notification:read:all', onNotificationChange);
+
+    return () => {
+      socket.emit('leave:user', userId);
+      socket.off('connect', onConnect);
+      socket.off('notification:new', onNotificationChange);
+      socket.off('notification:read', onNotificationChange);
+      socket.off('notification:read:all', onNotificationChange);
+    };
+  }, [userId, queryClient]);
+}
+

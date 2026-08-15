@@ -2,6 +2,27 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export type Priority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 export type Role = 'ADMIN' | 'MANAGER' | 'MEMBER';
+export type NotificationType =
+  | 'MENTION'
+  | 'ASSIGNED_TO_PROJECT'
+  | 'ASSIGNED_TO_CARD'
+  | 'CARD_COMMENT'
+  | 'CARD_UPDATED';
+
+export interface Notification {
+  id: string;
+  userId: string;
+  senderId: string | null;
+  senderName: string | null;
+  type: NotificationType;
+  title: string;
+  message: string;
+  projectId: string | null;
+  cardId: string | null;
+  commentId: string | null;
+  isRead: boolean;
+  createdAt: string;
+}
 
 export interface AuthUser {
   id: string;
@@ -483,6 +504,53 @@ export const api = {
       return request<{ success: boolean; message: string }>(`/api/admin/users/${userId}/reset-password`, {
         method: 'POST',
         body: JSON.stringify({ password }),
+      });
+    },
+  },
+
+  notifications: {
+    list: async (params?: { type?: 'MENTION' | 'ALL'; page?: number; limit?: number }): Promise<{
+      success: boolean;
+      data: Notification[];
+      meta: {
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+        unreadCount: number;
+      };
+    }> => {
+      const searchParams = new URLSearchParams();
+      if (params?.type && params.type !== 'ALL') searchParams.set('type', params.type);
+      if (params?.page) searchParams.set('page', String(params.page));
+      if (params?.limit) searchParams.set('limit', String(params.limit));
+      const query = searchParams.toString() ? `?${searchParams.toString()}` : '';
+      return request<{
+        success: boolean;
+        data: Notification[];
+        meta: {
+          total: number;
+          page: number;
+          limit: number;
+          totalPages: number;
+          unreadCount: number;
+        };
+      }>(`/api/notifications${query}`);
+    },
+
+    unreadCount: async (): Promise<{ success: boolean; data: { unreadCount: number } }> => {
+      return request<{ success: boolean; data: { unreadCount: number } }>('/api/notifications/unread-count');
+    },
+
+    markAsRead: async (id: string): Promise<{ success: boolean; data: Notification }> => {
+      return request<{ success: boolean; data: Notification }>(`/api/notifications/${id}/read`, {
+        method: 'PATCH',
+      });
+    },
+
+    markAllAsRead: async (): Promise<{ success: boolean; message: string }> => {
+      return request<{ success: boolean; message: string }>('/api/notifications/mark-all-read', {
+        method: 'POST',
       });
     },
   },

@@ -23,6 +23,7 @@ import {
 import { useAuth } from '@/lib/auth-context';
 import { AuthGuard } from '@/components/auth-guard';
 import { AccountMenu } from '@/components/account-menu';
+import { NotificationsPopover } from '@/components/notifications-popover';
 import { Button } from '@/components/ui/button';
 
 export default function AdminLayout({
@@ -239,6 +240,9 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
                 <span className="hidden sm:inline">Kanban Boards</span>
               </Button>
             </Link>
+
+            {/* Notifications Popover */}
+            <NotificationsPopover />
 
             {/* Uniform Theme Toggle */}
             <Button
