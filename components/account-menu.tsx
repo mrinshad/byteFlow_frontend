@@ -71,7 +71,7 @@ export function AccountMenu() {
             <>
               {isAdminPortal ? (
                 <DropdownMenuItem
-                  render={<Link href="/" className="gap-2.5 cursor-pointer text-xs font-medium" />}
+                  render={<Link href="/projects" className="gap-2.5 cursor-pointer text-xs font-medium" />}
                 >
                   <LayoutGrid className="h-3.5 w-3.5 text-muted-foreground" />
                   <span>Kanban Boards</span>

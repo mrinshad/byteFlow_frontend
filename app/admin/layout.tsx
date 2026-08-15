@@ -55,7 +55,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
         <p className="mt-1.5 max-w-md text-sm text-muted-foreground">
           This portal is reserved for system administrators. You are currently logged in as <span className="font-semibold text-foreground">@{user?.username}</span>.
         </p>
-        <Link href="/" className="mt-6">
+        <Link href="/projects" className="mt-6">
           <Button size="sm" variant="outline" className="gap-2 text-xs font-medium">
             <ArrowLeft className="h-4 w-4" />
             <span>Return to Kanban Boards</span>
@@ -171,7 +171,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
         <div className="p-3 border-t border-border/40 space-y-2">
           {/* Switch to User Portal Button */}
           <Link
-            href="/"
+            href="/projects"
             title={collapsed ? 'Switch to User Portal (Kanban Boards)' : undefined}
             className={`flex items-center rounded-lg border border-border/50 bg-muted/30 py-2 text-xs font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all group ${
               collapsed ? 'justify-center px-2' : 'justify-between px-3'
@@ -230,7 +230,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
 
           <div className="flex items-center gap-2">
             {/* Switch to User Portal (Quick Action) */}
-            <Link href="/">
+            <Link href="/projects">
               <Button
                 size="sm"
                 variant="outline"

@@ -54,7 +54,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         <div className="flex flex-col gap-4 pb-5 border-b border-border/40">
           <div className="flex items-center justify-between">
             <Link
-              href="/"
+              href="/projects"
               className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
@@ -86,7 +86,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
           ) : projectError || !project ? (
             <div className="py-12 text-center">
               <p className="text-sm font-medium text-destructive">Project not found or removed</p>
-              <Link href="/">
+              <Link href="/projects">
                 <Button variant="outline" size="sm" className="mt-4">
                   Return to Projects
                 </Button>
