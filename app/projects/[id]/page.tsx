@@ -7,6 +7,7 @@ import { ArrowLeft, Layers, History, BarChart3, Wifi, WifiOff } from 'lucide-rea
 import { api } from '@/lib/api';
 import { useProjectSocket } from '@/lib/use-project-socket';
 import { Navbar } from '@/components/navbar';
+import { AuthGuard } from '@/components/auth-guard';
 import { BoardFilterBar } from '@/components/board/board-filter-bar';
 import { LaneContainer } from '@/components/lanes/lane-container';
 import { CardDetailDrawer } from '@/components/cards/card-detail-drawer';
@@ -38,6 +39,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   const lanesCount = lanesData?.data?.length ?? project?.lanes?.length ?? 0;
 
   return (
+    <AuthGuard>
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
 
@@ -165,5 +167,6 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         />
       )}
     </div>
+    </AuthGuard>
   );
 }

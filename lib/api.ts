@@ -2,6 +2,14 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export type Priority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 
+export interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -142,11 +150,22 @@ export interface ProjectDetailResponse {
   };
 }
 
+function getAuthHeaders(): Record<string, string> {
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('byteflow_token');
+    if (token) {
+      return { Authorization: `Bearer ${token}` };
+    }
+  }
+  return {};
+}
+
 async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      ...getAuthHeaders(),
       ...options?.headers,
     },
   });
@@ -160,6 +179,26 @@ async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  auth: {
+    register: async (data: { name: string; email: string; password: string }): Promise<{ success: boolean; data: { user: AuthUser; token: string } }> => {
+      return request<{ success: boolean; data: { user: AuthUser; token: string } }>('/api/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+
+    login: async (data: { email: string; password: string }): Promise<{ success: boolean; data: { user: AuthUser; token: string } }> => {
+      return request<{ success: boolean; data: { user: AuthUser; token: string } }>('/api/auth/login', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+
+    me: async (): Promise<{ success: boolean; data: AuthUser }> => {
+      return request<{ success: boolean; data: AuthUser }>('/api/auth/me');
+    },
+  },
+
   projects: {
     list: async (params?: { search?: string; page?: number; limit?: number }): Promise<ProjectsResponse> => {
       const searchParams = new URLSearchParams();

@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Search, Plus, FolderKanban, Layers, CheckCircle2 } from 'lucide-react';
 import { api, type Project } from '@/lib/api';
 import { Navbar } from '@/components/navbar';
+import { AuthGuard } from '@/components/auth-guard';
 import { ProjectCard } from '@/components/projects/project-card';
 import { CreateProjectDialog } from '@/components/projects/create-project-dialog';
 import { EditProjectDialog } from '@/components/projects/edit-project-dialog';
@@ -34,8 +35,9 @@ export default function ProjectsPage() {
   const globalStats = globalStatsData?.data;
 
   return (
+    <AuthGuard>
     <div className="min-h-screen bg-background flex flex-col">
-      <Navbar onNewProject={() => setCreateOpen(true)} />
+      <Navbar />
 
       <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
         {/* Page Header */}
@@ -182,5 +184,6 @@ export default function ProjectsPage() {
         onOpenChange={(open) => !open && setDeletingProject(null)}
       />
     </div>
+    </AuthGuard>
   );
 }

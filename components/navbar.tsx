@@ -3,15 +3,13 @@
 import React from 'react';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
-import { Layers, Moon, Sun, Plus } from 'lucide-react';
+import { Layers, Moon, Sun, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/lib/auth-context';
 
-interface NavbarProps {
-  onNewProject?: () => void;
-}
-
-export function Navbar({ onNewProject }: NavbarProps) {
+export function Navbar() {
   const { theme, setTheme } = useTheme();
+  const { user, isAuthenticated, logout } = useAuth();
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/80 backdrop-blur-md">
@@ -26,11 +24,22 @@ export function Navbar({ onNewProject }: NavbarProps) {
         </div>
 
         <div className="flex items-center gap-2">
-          {onNewProject && (
-            <Button size="sm" onClick={onNewProject} className="gap-1.5 font-medium shadow-xs">
-              <Plus className="h-4 w-4" />
-              <span>New Project</span>
-            </Button>
+          {isAuthenticated && user && (
+            <>
+              <span className="hidden sm:inline text-sm text-muted-foreground">
+                {user.name}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={logout}
+                className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground"
+                aria-label="Logout"
+                title="Logout"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </>
           )}
 
           <Button

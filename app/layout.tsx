@@ -2,6 +2,7 @@ import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { QueryProvider } from "@/lib/query-provider";
+import { AuthProvider } from "@/lib/auth-context";
 import { Toaster } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -31,7 +32,9 @@ export default function RootLayout({
       <body className="min-h-screen bg-background text-foreground selection:bg-primary/20">
         <ThemeProvider>
           <QueryProvider>
-            {children}
+            <AuthProvider>
+              {children}
+            </AuthProvider>
             <Toaster position="bottom-right" richColors closeButton />
           </QueryProvider>
         </ThemeProvider>
