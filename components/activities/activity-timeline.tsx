@@ -15,6 +15,7 @@ import {
   Trash2,
   Layers,
   History,
+  RotateCcw,
 } from 'lucide-react';
 import { api, type ActivityLog } from '@/lib/api';
 
@@ -58,12 +59,18 @@ export function ActivityTimeline({ cardId, projectId, limit = 50 }: ActivityTime
 
   const renderActionContent = (activity: ActivityLog) => {
     const { action, oldValue, newValue, lane, tag, card } = activity;
+    const cardTitle = card?.title || (newValue as any)?.title || (oldValue as any)?.title;
+    const cardLabel = cardTitle ? (
+      <strong className="font-semibold text-foreground">&quot;{cardTitle}&quot;</strong>
+    ) : (
+      'this card'
+    );
 
     switch (action) {
       case 'CREATE_CARD':
         return (
           <span>
-            created this card{' '}
+            created card {cardTitle ? <strong className="font-semibold text-foreground">&quot;{cardTitle}&quot;</strong> : ''}{' '}
             {lane?.name && (
               <>
                 in <strong className="font-semibold text-foreground">{lane.name}</strong>
@@ -74,14 +81,14 @@ export function ActivityTimeline({ cardId, projectId, limit = 50 }: ActivityTime
       case 'MOVE_CARD':
         return (
           <span>
-            moved {card?.title ? <strong className="font-semibold text-foreground">&quot;{card.title}&quot;</strong> : 'this card'}{' '}
+            moved card {cardLabel}{' '}
             to <strong className="font-semibold text-foreground">{lane?.name || (newValue as any)?.laneId || 'another lane'}</strong>
           </span>
         );
       case 'CHANGE_PRIORITY':
         return (
           <span>
-            changed priority from{' '}
+            changed priority of card {cardLabel} from{' '}
             <span className="font-medium text-muted-foreground line-through">
               {(oldValue as any)?.priority || 'None'}
             </span>{' '}
@@ -100,39 +107,42 @@ export function ActivityTimeline({ cardId, projectId, limit = 50 }: ActivityTime
           : 'None';
         return (
           <span>
-            changed due date to <strong className="font-semibold text-foreground">{newDue}</strong>
+            changed due date of card {cardLabel} to <strong className="font-semibold text-foreground">{newDue}</strong>
           </span>
         );
       case 'ASSIGN_USER':
+        const assignee = (newValue as any)?.assigneeName || (newValue as any)?.assigneeId || 'a team member';
         return (
           <span>
-            assigned to <strong className="font-semibold text-foreground">{(newValue as any)?.assigneeId || 'a team member'}</strong>
+            assigned card {cardLabel} to <strong className="font-semibold text-foreground">{assignee}</strong>
           </span>
         );
       case 'UNASSIGN_USER':
-        return <span>removed assignment</span>;
+        return <span>removed assignment from card {cardLabel}</span>;
       case 'ADD_TAG_TO_CARD':
         return (
           <span>
-            added tag <strong className="font-semibold text-foreground">{tag?.name || (newValue as any)?.tagName || 'tag'}</strong>
+            added tag <strong className="font-semibold text-foreground">{tag?.name || (newValue as any)?.tagName || 'tag'}</strong> to card {cardLabel}
           </span>
         );
       case 'REMOVE_TAG_FROM_CARD':
         return (
           <span>
-            removed tag <strong className="font-semibold text-foreground">{tag?.name || (oldValue as any)?.tagName || 'tag'}</strong>
+            removed tag <strong className="font-semibold text-foreground">{tag?.name || (oldValue as any)?.tagName || 'tag'}</strong> from card {cardLabel}
           </span>
         );
       case 'CREATE_COMMENT':
-        return <span>commented on this card</span>;
+        return <span>commented on card {cardLabel}</span>;
       case 'UPDATE_COMMENT':
-        return <span>edited a comment</span>;
+        return <span>edited a comment on card {cardLabel}</span>;
       case 'DELETE_COMMENT':
-        return <span>deleted a comment</span>;
+        return <span>deleted a comment from card {cardLabel}</span>;
       case 'UPDATE_CARD':
-        return <span>updated card details</span>;
+        return <span>updated card details for {cardLabel}</span>;
       case 'DELETE_CARD':
-        return <span>deleted this card</span>;
+        return <span>deleted card {cardLabel}</span>;
+      case 'RESTORE_CARD':
+        return <span>restored card {cardLabel}</span>;
       case 'CREATE_LANE':
         return (
           <span>
@@ -187,6 +197,8 @@ export function ActivityTimeline({ cardId, projectId, limit = 50 }: ActivityTime
       case 'DELETE_COMMENT':
       case 'DELETE_TAG':
         return <Trash2 className="h-3.5 w-3.5 text-rose-500" />;
+      case 'RESTORE_CARD':
+        return <RotateCcw className="h-3.5 w-3.5 text-emerald-500" />;
       default:
         return <Edit className="h-3.5 w-3.5 text-muted-foreground" />;
     }
@@ -208,7 +220,6 @@ export function ActivityTimeline({ cardId, projectId, limit = 50 }: ActivityTime
     <div className="relative pl-4 space-y-4 before:absolute before:left-1.5 before:top-2 before:bottom-2 before:w-[1px] before:bg-border/60">
       {activities.map((act) => {
         const performer = act.performedBy || 'Team Member';
-        const initials = performer.slice(0, 2).toUpperCase();
 
         return (
           <div key={act.id} className="relative flex items-start gap-2.5 text-xs text-muted-foreground">
