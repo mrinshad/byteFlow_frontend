@@ -41,7 +41,8 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const { theme, setTheme } = useTheme();
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
+  // Sidebar collapsed by default
+  const [collapsed, setCollapsed] = useState(true);
 
   // If user is not an ADMIN, show access denied
   if (user?.role !== 'ADMIN') {
@@ -103,96 +104,137 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
           collapsed ? 'w-[68px]' : 'w-60'
         }`}
       >
-        {/* Collapse Toggle */}
-        <button
-          type="button"
-          onClick={() => setCollapsed(!collapsed)}
-          className="absolute -right-3 top-1/2 -translate-y-1/2 z-50 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-background shadow-sm hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          {collapsed ? (
-            <ChevronRight className="h-3 w-3" />
-          ) : (
-            <ChevronLeft className="h-3 w-3" />
-          )}
-        </button>
+        {/* Collapse Toggle with Tooltip */}
+        <div className="absolute -right-3 top-1/2 -translate-y-1/2 z-50 group/toggle">
+          <button
+            type="button"
+            onClick={() => setCollapsed(!collapsed)}
+            className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-background shadow-sm hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {collapsed ? (
+              <ChevronRight className="h-3 w-3" />
+            ) : (
+              <ChevronLeft className="h-3 w-3" />
+            )}
+          </button>
+          <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-2 hidden group-hover/toggle:flex items-center z-50 animate-in fade-in-0 zoom-in-95 duration-150">
+            <div className="rounded-md border border-border bg-popover px-2 py-0.5 text-[11px] font-semibold text-popover-foreground shadow-md whitespace-nowrap">
+              {collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            </div>
+          </div>
+        </div>
 
         {/* Top: Logo + Nav */}
         <div className="flex flex-col flex-1 min-h-0">
           {/* Logo */}
           <div className={`h-14 flex items-center border-b border-border/40 ${collapsed ? 'justify-center px-2' : 'px-4'}`}>
-            <Link href="/admin" className="flex items-center gap-2.5 min-w-0" title="ByteFlow Admin">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-                <Layers className="h-4 w-4" />
-              </div>
-              {!collapsed && (
-                <div className="flex flex-col min-w-0">
-                  <span className="text-sm font-bold tracking-tight text-foreground leading-none truncate">ByteFlow</span>
-                  <span className="text-[10px] font-semibold text-primary mt-0.5">Admin</span>
+            <div className="relative group/logo">
+              <Link href="/admin" className="flex items-center gap-2.5 min-w-0">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+                  <Layers className="h-4 w-4" />
+                </div>
+                {!collapsed && (
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-bold tracking-tight text-foreground leading-none truncate">ByteFlow</span>
+                    <span className="text-[10px] font-semibold text-primary mt-0.5">Admin</span>
+                  </div>
+                )}
+              </Link>
+              {collapsed && (
+                <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3.5 hidden group-hover/logo:flex items-center z-50 animate-in fade-in-0 zoom-in-95 duration-150">
+                  <div className="rounded-md border border-border bg-popover px-2.5 py-1 text-xs font-semibold text-popover-foreground shadow-md whitespace-nowrap">
+                    ByteFlow Admin
+                  </div>
                 </div>
               )}
-            </Link>
+            </div>
           </div>
 
-          {/* Navigation */}
+          {/* Navigation with Floating Tooltips */}
           <nav className="flex-1 overflow-y-auto px-3 py-4">
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    title={collapsed ? item.label : undefined}
-                    className={`group flex items-center rounded-lg transition-colors ${
-                      collapsed ? 'justify-center h-10 w-10 mx-auto' : 'gap-3 px-3 h-9'
-                    } ${
-                      item.active
-                        ? 'bg-primary/10 text-primary font-semibold'
-                        : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
-                    }`}
-                  >
-                    <Icon className={`shrink-0 ${collapsed ? 'h-4.5 w-4.5' : 'h-4 w-4'}`} />
-                    {!collapsed && <span className="text-[13px] truncate">{item.label}</span>}
-                  </Link>
+                  <div key={item.href} className="relative group/nav">
+                    <Link
+                      href={item.href}
+                      className={`group flex items-center rounded-lg transition-colors ${
+                        collapsed ? 'justify-center h-10 w-10 mx-auto' : 'gap-3 px-3 h-9'
+                      } ${
+                        item.active
+                          ? 'bg-primary/10 text-primary font-semibold'
+                          : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+                      }`}
+                    >
+                      <Icon className={`shrink-0 ${collapsed ? 'h-4.5 w-4.5' : 'h-4 w-4'}`} />
+                      {!collapsed && <span className="text-[13px] truncate">{item.label}</span>}
+                    </Link>
+
+                    {/* Floating Tooltip when collapsed */}
+                    {collapsed && (
+                      <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3.5 hidden group-hover/nav:flex items-center z-50 animate-in fade-in-0 zoom-in-95 duration-150">
+                        <div className="rounded-md border border-border bg-popover px-2.5 py-1 text-xs font-semibold text-popover-foreground shadow-md whitespace-nowrap">
+                          {item.label}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>
           </nav>
         </div>
 
-        {/* Bottom: Portal Switch + User */}
+        {/* Bottom: Portal Switch + User with Tooltips */}
         <div className={`border-t border-border/40 ${collapsed ? 'px-2 py-3' : 'px-3 py-3'} space-y-3`}>
           {/* Switch to User Portal */}
-          <Link
-            href="/projects"
-            title={collapsed ? 'Kanban Boards' : undefined}
-            className={`flex items-center rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors ${
-              collapsed ? 'justify-center h-10 w-10 mx-auto' : 'gap-2.5 px-3 h-9'
-            }`}
-          >
-            <LayoutGrid className="h-4 w-4 shrink-0" />
-            {!collapsed && (
-              <>
-                <span className="truncate flex-1">Kanban Boards</span>
-                <ArrowRight className="h-3 w-3 text-muted-foreground/50" />
-              </>
+          <div className="relative group/portal">
+            <Link
+              href="/projects"
+              className={`flex items-center rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors ${
+                collapsed ? 'justify-center h-10 w-10 mx-auto' : 'gap-2.5 px-3 h-9'
+              }`}
+            >
+              <LayoutGrid className="h-4 w-4 shrink-0" />
+              {!collapsed && (
+                <>
+                  <span className="truncate flex-1">Kanban Boards</span>
+                  <ArrowRight className="h-3 w-3 text-muted-foreground/50" />
+                </>
+              )}
+            </Link>
+            {collapsed && (
+              <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3.5 hidden group-hover/portal:flex items-center z-50 animate-in fade-in-0 zoom-in-95 duration-150">
+                <div className="rounded-md border border-border bg-popover px-2.5 py-1 text-xs font-semibold text-popover-foreground shadow-md whitespace-nowrap">
+                  Kanban Boards
+                </div>
+              </div>
             )}
-          </Link>
+          </div>
 
           {/* User */}
-          <div className={`flex items-center rounded-lg ${collapsed ? 'justify-center' : 'gap-2.5 px-3'} py-1.5`}>
-            <div
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/8 text-primary text-xs font-bold ring-1 ring-primary/15"
-              title={collapsed ? `${user.name} (@${user.username})` : undefined}
-            >
-              {user.name.charAt(0).toUpperCase()}
+          <div className="relative group/user">
+            <div className={`flex items-center rounded-lg ${collapsed ? 'justify-center' : 'gap-2.5 px-3'} py-1.5`}>
+              <div
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/8 text-primary text-xs font-bold ring-1 ring-primary/15"
+              >
+                {user.name.charAt(0).toUpperCase()}
+              </div>
+              {!collapsed && (
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-semibold text-foreground leading-tight">{user.name}</p>
+                  <p className="truncate text-[10px] text-muted-foreground leading-tight">@{user.username}</p>
+                </div>
+              )}
             </div>
-            {!collapsed && (
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-semibold text-foreground leading-tight">{user.name}</p>
-                <p className="truncate text-[10px] text-muted-foreground leading-tight">@{user.username}</p>
+            {collapsed && (
+              <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3.5 hidden group-hover/user:flex items-center z-50 animate-in fade-in-0 zoom-in-95 duration-150">
+                <div className="rounded-md border border-border bg-popover px-2.5 py-1.5 text-xs text-popover-foreground shadow-md whitespace-nowrap">
+                  <p className="font-semibold">{user.name}</p>
+                  <p className="text-[10px] text-muted-foreground">@{user.username} • {user.role}</p>
+                </div>
               </div>
             )}
           </div>
