@@ -5,9 +5,7 @@ import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
-  Users,
-  ShieldCheck,
-  FolderKanban,
+  Plus,
   Search,
   KeyRound,
   Lock,
@@ -16,9 +14,6 @@ import {
   RotateCcw,
   Eye,
   EyeOff,
-  Shield,
-  Crown,
-  UserPlus,
 } from 'lucide-react';
 import { api, type Role, type AdminUser } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
@@ -107,34 +102,16 @@ export default function AdminUsersPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-6 border-b border-border/40">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">User Directory & Governance</h1>
-            {isSuperAdmin && (
-              <span className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
-                <Crown className="h-3 w-3" />
-                Super Admin Access
-              </span>
-            )}
-          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Users</h1>
           <p className="mt-1 text-xs text-muted-foreground">
-            Manage user accounts, assign permission roles, lock/unlock access, and inspect project allocations.
+            Manage user accounts, roles, and project allocations.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Create User Button */}
-          <Button
-            size="sm"
-            onClick={() => setIsCreateOpen(true)}
-            className="gap-1.5 text-xs font-semibold shadow-2xs cursor-pointer"
-          >
-            <UserPlus className="h-3.5 w-3.5" />
-            <span>Add User</span>
-          </Button>
-
           <Button
             variant="outline"
             size="sm"
@@ -147,18 +124,23 @@ export default function AdminUsersPage() {
             <span>{showDeactivated ? 'Hide Deactivated' : `Show Deactivated (${deactivatedUsers.length})`}</span>
           </Button>
 
-          <span className="rounded-lg border border-border/60 bg-card px-3 py-1.5 text-xs font-semibold text-foreground shadow-2xs">
-            <span className="text-primary font-bold">{activeUsers.length}</span> Active Users
-          </span>
+          <Button
+            onClick={() => setIsCreateOpen(true)}
+            size="sm"
+            className="gap-1.5 text-xs font-semibold shadow-xs"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add User</span>
+          </Button>
         </div>
       </div>
 
-      {/* Search Bar */}
+      {/* Filter and Search Bar */}
       <div className="flex items-center justify-between gap-4">
         <div className="relative w-full max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <Input
-            placeholder="Search by name or username..."
+            placeholder="Search users..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9 h-9 text-xs"
@@ -171,37 +153,31 @@ export default function AdminUsersPage() {
 
       {/* Users Table */}
       <div className="rounded-xl border border-border/60 bg-card shadow-xs overflow-hidden">
-        <div className="border-b border-border/40 px-6 py-4">
-          <h2 className="text-sm font-bold text-foreground">Registered User Roster</h2>
-          <p className="text-xs text-muted-foreground">Detailed view of user roles, status, and governance controls</p>
-        </div>
-
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="border-b border-border/40 bg-muted/40 text-muted-foreground font-semibold uppercase tracking-wider text-[10px]">
+            <thead className="border-b border-border/40 bg-muted/30 text-muted-foreground font-medium uppercase tracking-wider text-[10px]">
               <tr>
-                <th className="px-6 py-3.5">User</th>
-                <th className="px-4 py-3.5">Username</th>
-                <th className="px-4 py-3.5">Status</th>
-                <th className="px-4 py-3.5">Role</th>
-                <th className="px-6 py-3.5">Assigned Projects</th>
-                <th className="px-4 py-3.5">Date Joined</th>
-                <th className="px-6 py-3.5 text-right">Actions</th>
+                <th className="px-6 py-3">User</th>
+                <th className="px-4 py-3">Role</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-6 py-3">Assigned Projects</th>
+                <th className="px-4 py-3">Joined</th>
+                <th className="px-6 py-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/40">
               {isLoading ? (
                 Array.from({ length: 4 }).map((_, i) => (
                   <tr key={i}>
-                    <td colSpan={7} className="px-6 py-4">
+                    <td colSpan={6} className="px-6 py-4">
                       <Skeleton className="h-6 w-full" />
                     </td>
                   </tr>
                 ))
               ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
-                    No users match your query
+                  <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
+                    No users found
                   </td>
                 </tr>
               ) : (
@@ -216,92 +192,84 @@ export default function AdminUsersPage() {
                         user.isDeleted
                           ? 'bg-destructive/[0.02] opacity-75'
                           : user.isLocked
-                          ? 'bg-amber-500/[0.03]'
+                          ? 'bg-amber-500/[0.02]'
                           : 'hover:bg-muted/20'
                       }`}
                     >
-                      {/* Name & Avatar */}
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold shrink-0 ring-1 ${
-                              user.role === 'SUPER_ADMIN'
-                                ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 ring-purple-500/20'
-                                : 'bg-primary/10 text-primary ring-primary/20'
-                            }`}
-                          >
+                      {/* User (Name + Username) */}
+                      <td className="px-6 py-3.5">
+                        <div className="flex items-center gap-2.5">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-muted-foreground text-xs font-semibold shrink-0">
                             {user.name.charAt(0).toUpperCase()}
                           </div>
                           <div>
                             <div className="flex items-center gap-1.5">
-                              <span className="font-bold text-foreground text-sm">{user.name}</span>
+                              <span className="font-medium text-foreground text-sm">{user.name}</span>
                               {isSelf && (
-                                <span className="rounded bg-primary/10 px-1.5 py-0.2 text-[9px] font-bold text-primary">
-                                  You
+                                <span className="text-[11px] text-muted-foreground font-normal">
+                                  (You)
                                 </span>
                               )}
                             </div>
+                            <span className="text-xs text-muted-foreground">@{user.username}</span>
                           </div>
                         </div>
                       </td>
 
-                      {/* Username */}
-                      <td className="px-4 py-4 font-mono text-xs text-muted-foreground">
-                        @{user.username}
+                      {/* Role Badge */}
+                      <td className="px-4 py-3.5">
+                        <span
+                          className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                            user.role === 'SUPER_ADMIN'
+                              ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20'
+                              : user.role === 'ADMIN'
+                              ? 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
+                              : user.role === 'MANAGER'
+                              ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
+                              : 'bg-muted text-muted-foreground border border-border/50'
+                          }`}
+                        >
+                          {user.role === 'SUPER_ADMIN'
+                            ? 'Super Admin'
+                            : user.role === 'ADMIN'
+                            ? 'Admin'
+                            : user.role === 'MANAGER'
+                            ? 'Manager'
+                            : 'Member'}
+                        </span>
                       </td>
 
                       {/* Account Status Badge */}
-                      <td className="px-4 py-4">
+                      <td className="px-4 py-3.5">
                         {user.isDeleted ? (
-                          <span className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-destructive/10 text-destructive border border-destructive/20">
+                          <span className="inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-destructive/10 text-destructive border border-destructive/20">
                             Deactivated
                           </span>
                         ) : user.isLocked ? (
-                          <span className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                          <span className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                             <Lock className="h-3 w-3" />
                             Locked
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                          <span className="inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                             Active
                           </span>
                         )}
                       </td>
 
-                      {/* Role Badge */}
-                      <td className="px-4 py-4">
-                        <span
-                          className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                            user.role === 'SUPER_ADMIN'
-                              ? 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/20'
-                              : user.role === 'ADMIN'
-                              ? 'bg-primary text-primary-foreground'
-                              : user.role === 'MANAGER'
-                              ? 'bg-blue-500/15 text-blue-600 dark:text-blue-400 font-semibold'
-                              : 'bg-muted text-muted-foreground'
-                          }`}
-                        >
-                          {user.role === 'SUPER_ADMIN' && <Crown className="h-3 w-3" />}
-                          {user.role}
-                        </span>
-                      </td>
-
                       {/* Assigned Projects */}
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-3.5">
                         {user.assignedProjects.length === 0 ? (
-                          <span className="text-muted-foreground/60 italic text-[11px]">
-                            No projects assigned
-                          </span>
+                          <span className="text-muted-foreground/60 text-xs italic">None</span>
                         ) : (
-                          <div className="flex flex-wrap gap-1.5 max-w-md">
+                          <div className="flex flex-wrap gap-1 max-w-xs">
                             {user.assignedProjects.map((p) => (
                               <Link
                                 key={p.id}
                                 href={`/projects/${p.id}`}
-                                className="inline-flex items-center gap-1 rounded-md border border-border/50 bg-muted/50 px-2 py-0.5 text-[11px] font-medium text-foreground hover:bg-muted hover:border-border transition-colors"
+                                className="inline-flex items-center rounded bg-muted/60 px-1.5 py-0.5 text-[11px] font-medium text-foreground hover:bg-muted transition-colors"
                               >
-                                <FolderKanban className="h-3 w-3 text-muted-foreground" />
-                                <span>{p.name}</span>
+                                {p.name}
                               </Link>
                             ))}
                           </div>
@@ -309,7 +277,7 @@ export default function AdminUsersPage() {
                       </td>
 
                       {/* Date Joined */}
-                      <td className="px-4 py-4 text-muted-foreground text-xs">
+                      <td className="px-4 py-3.5 text-muted-foreground text-xs whitespace-nowrap">
                         {new Date(user.createdAt).toLocaleDateString('en-US', {
                           month: 'short',
                           day: 'numeric',
@@ -318,8 +286,8 @@ export default function AdminUsersPage() {
                       </td>
 
                       {/* Actions */}
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
+                      <td className="px-6 py-3.5 text-right">
+                        <div className="flex items-center justify-end gap-1">
                           {user.isDeleted ? (
                             <Button
                               size="xs"
@@ -330,11 +298,55 @@ export default function AdminUsersPage() {
                               title={!isSuperAdmin && user.role === 'ADMIN' ? 'Only Super Admin can restore Administrators' : 'Restore user'}
                             >
                               <RotateCcw className="h-3 w-3" />
-                              <span>Restore User</span>
+                              <span>Restore</span>
                             </Button>
                           ) : (
                             <>
-                              {/* Lock / Unlock Toggle Button */}
+                              {/* Role Selector */}
+                              <select
+                                value={user.role}
+                                onChange={(e) =>
+                                  updateRoleMutation.mutate({
+                                    userId: user.id,
+                                    role: e.target.value as Role,
+                                  })
+                                }
+                                disabled={
+                                  updateRoleMutation.isPending ||
+                                  isSelf ||
+                                  user.role === 'SUPER_ADMIN' ||
+                                  (!isSuperAdmin && isTargetAdmin)
+                                }
+                                className="h-7 rounded border border-border/50 bg-background px-2 text-[11px] font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                                title={
+                                  user.role === 'SUPER_ADMIN'
+                                    ? 'Super Administrator role cannot be changed'
+                                    : isSelf
+                                    ? 'You cannot change your own role'
+                                    : !isSuperAdmin && isTargetAdmin
+                                    ? 'Only Super Admin can change Administrator roles'
+                                    : 'Change user role'
+                                }
+                              >
+                                {user.role === 'SUPER_ADMIN' ? (
+                                  <option value="SUPER_ADMIN">Super Admin</option>
+                                ) : isSuperAdmin ? (
+                                  <>
+                                    <option value="ADMIN">Admin</option>
+                                    <option value="MANAGER">Manager</option>
+                                    <option value="MEMBER">Member</option>
+                                  </>
+                                ) : isTargetAdmin ? (
+                                  <option value={user.role}>Admin</option>
+                                ) : (
+                                  <>
+                                    <option value="MANAGER">Manager</option>
+                                    <option value="MEMBER">Member</option>
+                                  </>
+                                )}
+                              </select>
+
+                              {/* Lock / Unlock */}
                               {!isSelf && user.role !== 'SUPER_ADMIN' && (
                                 <Button
                                   size="icon-xs"
@@ -346,7 +358,7 @@ export default function AdminUsersPage() {
                                     })
                                   }
                                   disabled={lockMutation.isPending || (!isSuperAdmin && user.role === 'ADMIN')}
-                                  className={`h-8 w-8 cursor-pointer disabled:opacity-40 ${
+                                  className={`h-7 w-7 cursor-pointer disabled:opacity-40 ${
                                     user.isLocked
                                       ? 'text-amber-600 dark:text-amber-400 hover:bg-amber-500/10'
                                       : 'text-muted-foreground hover:text-foreground'
@@ -367,68 +379,23 @@ export default function AdminUsersPage() {
                                 </Button>
                               )}
 
-                              {/* Reset Password Button */}
+                              {/* Reset Password */}
                               <Button
-                                size="xs"
-                                variant="outline"
+                                size="icon-xs"
+                                variant="ghost"
                                 onClick={() => setResetUser(user)}
                                 disabled={!isSuperAdmin && isTargetAdmin && !isSelf}
-                                className="h-8 gap-1.5 text-xs font-semibold cursor-pointer disabled:opacity-40"
+                                className="h-7 w-7 text-muted-foreground hover:text-foreground cursor-pointer disabled:opacity-40"
                                 title={
                                   !isSuperAdmin && isTargetAdmin && !isSelf
                                     ? 'Only Super Admin can reset password of Administrators'
-                                    : 'Reset password for this user'
+                                    : 'Reset password'
                                 }
                               >
-                                <KeyRound className="h-3.5 w-3.5 text-muted-foreground" />
-                                <span className="hidden sm:inline">Reset</span>
+                                <KeyRound className="h-3.5 w-3.5" />
                               </Button>
 
-                              {/* Role Selector */}
-                              <select
-                                value={user.role}
-                                onChange={(e) =>
-                                  updateRoleMutation.mutate({
-                                    userId: user.id,
-                                    role: e.target.value as Role,
-                                  })
-                                }
-                                disabled={
-                                  updateRoleMutation.isPending ||
-                                  isSelf ||
-                                  user.role === 'SUPER_ADMIN' ||
-                                  (!isSuperAdmin && isTargetAdmin)
-                                }
-                                className="h-8 rounded-lg border border-border/60 bg-background px-2 text-xs font-semibold text-foreground shadow-2xs focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                                title={
-                                  user.role === 'SUPER_ADMIN'
-                                    ? 'Super Administrator role cannot be changed'
-                                    : isSelf
-                                    ? 'You cannot change your own role'
-                                    : !isSuperAdmin && isTargetAdmin
-                                    ? 'Only Super Admin can change Administrator roles'
-                                    : 'Change user role'
-                                }
-                              >
-                                {user.role === 'SUPER_ADMIN' ? (
-                                  <option value="SUPER_ADMIN">SUPER ADMIN</option>
-                                ) : isSuperAdmin ? (
-                                  <>
-                                    <option value="ADMIN">ADMIN</option>
-                                    <option value="MANAGER">MANAGER</option>
-                                    <option value="MEMBER">MEMBER</option>
-                                  </>
-                                ) : isTargetAdmin ? (
-                                  <option value={user.role}>{user.role}</option>
-                                ) : (
-                                  <>
-                                    <option value="MANAGER">MANAGER</option>
-                                    <option value="MEMBER">MEMBER</option>
-                                  </>
-                                )}
-                              </select>
-
-                              {/* Deactivate User Button */}
+                              {/* Deactivate */}
                               {!isSelf && user.role !== 'SUPER_ADMIN' && (
                                 <Button
                                   size="icon-xs"
@@ -439,11 +406,11 @@ export default function AdminUsersPage() {
                                     }
                                   }}
                                   disabled={deleteMutation.isPending || (!isSuperAdmin && user.role === 'ADMIN')}
-                                  className="h-8 w-8 text-muted-foreground hover:text-destructive cursor-pointer disabled:opacity-40"
+                                  className="h-7 w-7 text-muted-foreground hover:text-destructive cursor-pointer disabled:opacity-40"
                                   title={
                                     !isSuperAdmin && user.role === 'ADMIN'
                                       ? 'Only Super Admin can deactivate Administrators'
-                                      : 'Deactivate User'
+                                      : 'Deactivate user'
                                   }
                                 >
                                   <Trash2 className="h-3.5 w-3.5" />
