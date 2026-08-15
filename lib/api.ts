@@ -1,13 +1,28 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export type Priority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+export type Role = 'ADMIN' | 'MANAGER' | 'MEMBER';
 
 export interface AuthUser {
   id: string;
   name: string;
-  email: string;
+  username: string;
+  role: Role;
   createdAt: string;
   updatedAt?: string;
+}
+
+export interface ProjectMember {
+  id: string;
+  projectId?: string;
+  userId: string;
+  createdAt: string;
+  user?: {
+    id: string;
+    name: string;
+    username: string;
+    role: Role;
+  };
 }
 
 export interface Project {
@@ -19,9 +34,11 @@ export interface Project {
   updatedAt: string;
   deletedAt: string | null;
   deletedBy: string | null;
+  members?: ProjectMember[];
   _count?: {
     lanes: number;
     cards: number;
+    members?: number;
   };
 }
 
@@ -180,14 +197,14 @@ async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
 
 export const api = {
   auth: {
-    register: async (data: { name: string; email: string; password: string }): Promise<{ success: boolean; data: { user: AuthUser; token: string } }> => {
+    register: async (data: { name: string; username: string; password: string }): Promise<{ success: boolean; data: { user: AuthUser; token: string } }> => {
       return request<{ success: boolean; data: { user: AuthUser; token: string } }>('/api/auth/register', {
         method: 'POST',
         body: JSON.stringify(data),
       });
     },
 
-    login: async (data: { email: string; password: string }): Promise<{ success: boolean; data: { user: AuthUser; token: string } }> => {
+    login: async (data: { username: string; password: string }): Promise<{ success: boolean; data: { user: AuthUser; token: string } }> => {
       return request<{ success: boolean; data: { user: AuthUser; token: string } }>('/api/auth/login', {
         method: 'POST',
         body: JSON.stringify(data),
@@ -419,6 +436,34 @@ export const api = {
       return request<{ success: boolean; data: GlobalStats }>('/api/dashboard/global');
     },
   },
+
+  admin: {
+    getStats: async (): Promise<{ success: boolean; data: AdminStats }> => {
+      return request<{ success: boolean; data: AdminStats }>('/api/admin/stats');
+    },
+
+    getProjects: async (): Promise<{ success: boolean; data: AdminProject[] }> => {
+      return request<{ success: boolean; data: AdminProject[] }>('/api/admin/projects');
+    },
+
+    updateMembers: async (projectId: string, userIds: string[]): Promise<{ success: boolean; data: ProjectMember[] }> => {
+      return request<{ success: boolean; data: ProjectMember[] }>(`/api/admin/projects/${projectId}/members`, {
+        method: 'PUT',
+        body: JSON.stringify({ userIds }),
+      });
+    },
+
+    getUsers: async (): Promise<{ success: boolean; data: AdminUser[] }> => {
+      return request<{ success: boolean; data: AdminUser[] }>('/api/admin/users');
+    },
+
+    updateRole: async (userId: string, role: Role): Promise<{ success: boolean; data: AuthUser }> => {
+      return request<{ success: boolean; data: AuthUser }>(`/api/admin/users/${userId}/role`, {
+        method: 'PATCH',
+        body: JSON.stringify({ role }),
+      });
+    },
+  },
 };
 
 export interface ProjectStats {
@@ -448,4 +493,55 @@ export interface GlobalStats {
   totalProjects: number;
   totalCards: number;
   totalLanes: number;
+}
+
+export interface AdminStats {
+  totalProjects: number;
+  totalUsers: number;
+  totalCards: number;
+  totalLanes: number;
+  totalCompletedCards: number;
+  completionRate: number;
+  roleCounts: {
+    ADMIN: number;
+    MANAGER: number;
+    MEMBER: number;
+  };
+}
+
+export interface AdminProject {
+  id: string;
+  name: string;
+  description: string | null;
+  createdBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+  totalLanes: number;
+  totalCards: number;
+  completedCards: number;
+  completionPercentage: number;
+  memberCount: number;
+  members: Array<{
+    id: string;
+    userId: string;
+    user: {
+      id: string;
+      name: string;
+      username: string;
+      role: Role;
+    };
+    createdAt: string;
+  }>;
+}
+
+export interface AdminUser {
+  id: string;
+  name: string;
+  username: string;
+  role: Role;
+  createdAt: string;
+  assignedProjects: Array<{
+    id: string;
+    name: string;
+  }>;
 }

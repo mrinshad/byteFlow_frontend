@@ -13,7 +13,7 @@ export default function RegisterPage() {
   const router = useRouter();
 
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -37,7 +37,7 @@ export default function RegisterPage() {
     setSubmitting(true);
 
     try {
-      await register(name, email, password);
+      await register(name, username, password);
       router.replace('/');
     } catch (err: any) {
       setError(err.message || 'Registration failed');
@@ -93,17 +93,17 @@ export default function RegisterPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="email" className="text-sm font-medium text-foreground">
-              Email
+            <label htmlFor="username" className="text-sm font-medium text-foreground">
+              Username
             </label>
             <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="username"
+              type="text"
+              placeholder="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               required
-              autoComplete="email"
+              autoComplete="username"
             />
           </div>
 
