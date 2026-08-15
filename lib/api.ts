@@ -507,6 +507,18 @@ export const api = {
       return request<{ success: boolean; data: AdminUser[] }>(`/api/admin/users${query}`);
     },
 
+    createUser: async (data: {
+      name: string;
+      username: string;
+      password: string;
+      role: Role;
+    }): Promise<{ success: boolean; data: AdminUser; message?: string }> => {
+      return request<{ success: boolean; data: AdminUser; message?: string }>('/api/admin/users', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+
     toggleLock: async (userId: string, isLocked: boolean): Promise<{ success: boolean; data: AuthUser }> => {
       return request<{ success: boolean; data: AuthUser }>(`/api/admin/users/${userId}/lock`, {
         method: 'PATCH',

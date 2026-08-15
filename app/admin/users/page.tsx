@@ -18,10 +18,12 @@ import {
   EyeOff,
   Shield,
   Crown,
+  UserPlus,
 } from 'lucide-react';
 import { api, type Role, type AdminUser } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { AdminResetPasswordDialog } from '@/components/admin/admin-reset-password-dialog';
+import { AdminCreateUserDialog } from '@/components/admin/admin-create-user-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -32,6 +34,7 @@ export default function AdminUsersPage() {
   const [search, setSearch] = useState('');
   const [showDeactivated, setShowDeactivated] = useState(false);
   const [resetUser, setResetUser] = useState<AdminUser | null>(null);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   const isSuperAdmin = currentUser?.role === 'SUPER_ADMIN';
 
@@ -122,6 +125,16 @@ export default function AdminUsersPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Create User Button */}
+          <Button
+            size="sm"
+            onClick={() => setIsCreateOpen(true)}
+            className="gap-1.5 text-xs font-semibold shadow-2xs cursor-pointer"
+          >
+            <UserPlus className="h-3.5 w-3.5" />
+            <span>Add User</span>
+          </Button>
+
           <Button
             variant="outline"
             size="sm"
@@ -195,7 +208,6 @@ export default function AdminUsersPage() {
                 filteredUsers.map((user) => {
                   const isSelf = user.id === currentUser?.id;
                   const isTargetAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
-                  const canManageTarget = isSuperAdmin || (!isTargetAdmin && !isSelf);
 
                   return (
                     <tr
@@ -384,20 +396,24 @@ export default function AdminUsersPage() {
                                 disabled={
                                   updateRoleMutation.isPending ||
                                   isSelf ||
+                                  user.role === 'SUPER_ADMIN' ||
                                   (!isSuperAdmin && isTargetAdmin)
                                 }
                                 className="h-8 rounded-lg border border-border/60 bg-background px-2 text-xs font-semibold text-foreground shadow-2xs focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                                 title={
-                                  isSelf
+                                  user.role === 'SUPER_ADMIN'
+                                    ? 'Super Administrator role cannot be changed'
+                                    : isSelf
                                     ? 'You cannot change your own role'
                                     : !isSuperAdmin && isTargetAdmin
                                     ? 'Only Super Admin can change Administrator roles'
                                     : 'Change user role'
                                 }
                               >
-                                {isSuperAdmin ? (
+                                {user.role === 'SUPER_ADMIN' ? (
+                                  <option value="SUPER_ADMIN">SUPER ADMIN</option>
+                                ) : isSuperAdmin ? (
                                   <>
-                                    <option value="SUPER_ADMIN">SUPER ADMIN</option>
                                     <option value="ADMIN">ADMIN</option>
                                     <option value="MANAGER">MANAGER</option>
                                     <option value="MEMBER">MEMBER</option>
@@ -445,6 +461,12 @@ export default function AdminUsersPage() {
           </table>
         </div>
       </div>
+
+      {/* Admin Create User Dialog */}
+      <AdminCreateUserDialog
+        open={isCreateOpen}
+        onOpenChange={setIsCreateOpen}
+      />
 
       {/* Admin Reset Password Dialog */}
       <AdminResetPasswordDialog
