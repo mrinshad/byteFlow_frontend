@@ -9,13 +9,11 @@ import {
   UserPlus,
   Trash2,
   ExternalLink,
-  Layers,
-  CheckCircle2,
-  Users,
   Plus,
-  Clock,
-  Shield,
   Search,
+  RotateCcw,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { api, type AdminProject } from '@/lib/api';
 import { AssignMembersDialog } from '@/components/admin/assign-members-dialog';
@@ -28,18 +26,34 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function AdminProjectsPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
+  const [showDeleted, setShowDeleted] = useState(false);
   const [assigningProject, setAssigningProject] = useState<AdminProject | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [deletingProject, setDeletingProject] = useState<any | null>(null);
 
   const { data: projectsData, isLoading } = useQuery({
-    queryKey: ['admin', 'projects'],
-    queryFn: () => api.admin.getProjects(),
+    queryKey: ['admin', 'projects', { includeDeleted: true }],
+    queryFn: () => api.admin.getProjects({ includeDeleted: true }),
   });
 
-  const projects = projectsData?.data || [];
+  const restoreMutation = useMutation({
+    mutationFn: (id: string) => api.admin.restoreProject(id),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'projects'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'stats'] });
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      toast.success(res.message || 'Project restored successfully');
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to restore project');
+    },
+  });
 
-  const filteredProjects = projects.filter((p) =>
+  const allProjects = projectsData?.data || [];
+  const activeProjects = allProjects.filter((p) => !p.isDeleted);
+  const deletedProjects = allProjects.filter((p) => p.isDeleted);
+
+  const displayedProjects = (showDeleted ? allProjects : activeProjects).filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
     (p.description && p.description.toLowerCase().includes(search.toLowerCase()))
   );
@@ -55,14 +69,28 @@ export default function AdminProjectsPage() {
           </p>
         </div>
 
-        <Button
-          onClick={() => setCreateOpen(true)}
-          size="sm"
-          className="gap-1.5 text-xs font-semibold shadow-xs"
-        >
-          <Plus className="h-4 w-4" />
-          <span>New Project</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowDeleted(!showDeleted)}
+            className={`gap-1.5 text-xs font-semibold ${
+              showDeleted ? 'border-destructive/40 bg-destructive/10 text-destructive' : ''
+            }`}
+          >
+            {showDeleted ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+            <span>{showDeleted ? 'Hide Deleted' : `Show Deleted (${deletedProjects.length})`}</span>
+          </Button>
+
+          <Button
+            onClick={() => setCreateOpen(true)}
+            size="sm"
+            className="gap-1.5 text-xs font-semibold shadow-xs"
+          >
+            <Plus className="h-4 w-4" />
+            <span>New Project</span>
+          </Button>
+        </div>
       </div>
 
       {/* Filter and Search Bar */}
@@ -77,7 +105,7 @@ export default function AdminProjectsPage() {
           />
         </div>
         <span className="text-xs font-medium text-muted-foreground">
-          Showing {filteredProjects.length} of {projects.length} projects
+          Showing {displayedProjects.length} of {showDeleted ? allProjects.length : activeProjects.length} projects
         </span>
       </div>
 
@@ -87,7 +115,7 @@ export default function AdminProjectsPage() {
           Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-64 rounded-xl" />
           ))
-        ) : filteredProjects.length === 0 ? (
+        ) : displayedProjects.length === 0 ? (
           <div className="col-span-full py-16 text-center rounded-xl border border-dashed border-border/60 bg-card/40">
             <FolderKanban className="mx-auto h-10 w-10 text-muted-foreground/40 mb-2" />
             <p className="text-sm font-semibold text-foreground">No projects found</p>
@@ -96,16 +124,24 @@ export default function AdminProjectsPage() {
             </p>
           </div>
         ) : (
-          filteredProjects.map((project) => (
+          displayedProjects.map((project) => (
             <div
               key={project.id}
-              className="flex flex-col justify-between rounded-xl border border-border/60 bg-card p-5 shadow-xs transition-all hover:border-border hover:shadow-sm"
+              className={`flex flex-col justify-between rounded-xl border p-5 shadow-xs transition-all ${
+                project.isDeleted
+                  ? 'border-destructive/30 bg-destructive/[0.02] opacity-80'
+                  : 'border-border/60 bg-card hover:border-border hover:shadow-sm'
+              }`}
             >
               <div>
                 {/* Project Header */}
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="font-bold text-foreground text-base line-clamp-1">{project.name}</h3>
-                  {project.completionPercentage === 100 && project.totalCards > 0 ? (
+                  {project.isDeleted ? (
+                    <span className="shrink-0 rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-destructive/10 text-destructive border border-destructive/20">
+                      Deleted
+                    </span>
+                  ) : project.completionPercentage === 100 && project.totalCards > 0 ? (
                     <span className="shrink-0 rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                       Completed
                     </span>
@@ -180,34 +216,49 @@ export default function AdminProjectsPage() {
 
               {/* Action Buttons */}
               <div className="mt-5 pt-4 border-t border-border/40 flex items-center justify-between gap-2">
-                <Button
-                  size="xs"
-                  variant="outline"
-                  onClick={() => setAssigningProject(project)}
-                  className="gap-1.5 text-xs font-semibold"
-                >
-                  <UserPlus className="h-3.5 w-3.5 text-primary" />
-                  <span>Assign Users</span>
-                </Button>
-
-                <div className="flex items-center gap-1.5">
+                {project.isDeleted ? (
                   <Button
-                    size="icon-xs"
-                    variant="ghost"
-                    onClick={() => setDeletingProject(project)}
-                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                    title="Delete Project"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => restoreMutation.mutate(project.id)}
+                    disabled={restoreMutation.isPending}
+                    className="w-full gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10 cursor-pointer"
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    <span>Restore Project</span>
                   </Button>
-
-                  <Link href={`/projects/${project.id}`}>
-                    <Button size="xs" variant="ghost" className="h-7 gap-1 text-xs font-semibold">
-                      <span>Open Board</span>
-                      <ExternalLink className="h-3 w-3" />
+                ) : (
+                  <>
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      onClick={() => setAssigningProject(project)}
+                      className="gap-1.5 text-xs font-semibold"
+                    >
+                      <UserPlus className="h-3.5 w-3.5 text-primary" />
+                      <span>Assign Users</span>
                     </Button>
-                  </Link>
-                </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        size="icon-xs"
+                        variant="ghost"
+                        onClick={() => setDeletingProject(project)}
+                        className="h-7 w-7 text-muted-foreground hover:text-destructive cursor-pointer"
+                        title="Delete Project"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+
+                      <Link href={`/projects/${project.id}`}>
+                        <Button size="xs" variant="ghost" className="h-7 gap-1 text-xs font-semibold">
+                          <span>Open Board</span>
+                          <ExternalLink className="h-3 w-3" />
+                        </Button>
+                      </Link>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           ))

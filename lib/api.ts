@@ -29,6 +29,8 @@ export interface AuthUser {
   name: string;
   username: string;
   role: Role;
+  isLocked?: boolean;
+  deletedAt?: string | null;
   createdAt: string;
   updatedAt?: string;
 }
@@ -165,6 +167,10 @@ export interface ActivityLog {
   comment?: {
     id: string;
     comment: string;
+  } | null;
+  project?: {
+    id: string;
+    name: string;
   } | null;
 }
 
@@ -478,8 +484,15 @@ export const api = {
       return request<{ success: boolean; data: AdminStats }>('/api/admin/stats');
     },
 
-    getProjects: async (): Promise<{ success: boolean; data: AdminProject[] }> => {
-      return request<{ success: boolean; data: AdminProject[] }>('/api/admin/projects');
+    getProjects: async (params?: { includeDeleted?: boolean }): Promise<{ success: boolean; data: AdminProject[] }> => {
+      const query = params?.includeDeleted ? '?includeDeleted=true' : '';
+      return request<{ success: boolean; data: AdminProject[] }>(`/api/admin/projects${query}`);
+    },
+
+    restoreProject: async (projectId: string): Promise<{ success: boolean; message: string }> => {
+      return request<{ success: boolean; message: string }>(`/api/admin/projects/${projectId}/restore`, {
+        method: 'POST',
+      });
     },
 
     updateMembers: async (projectId: string, userIds: string[]): Promise<{ success: boolean; data: ProjectMember[] }> => {
@@ -489,8 +502,28 @@ export const api = {
       });
     },
 
-    getUsers: async (): Promise<{ success: boolean; data: AdminUser[] }> => {
-      return request<{ success: boolean; data: AdminUser[] }>('/api/admin/users');
+    getUsers: async (params?: { includeDeleted?: boolean }): Promise<{ success: boolean; data: AdminUser[] }> => {
+      const query = params?.includeDeleted ? '?includeDeleted=true' : '';
+      return request<{ success: boolean; data: AdminUser[] }>(`/api/admin/users${query}`);
+    },
+
+    toggleLock: async (userId: string, isLocked: boolean): Promise<{ success: boolean; data: AuthUser }> => {
+      return request<{ success: boolean; data: AuthUser }>(`/api/admin/users/${userId}/lock`, {
+        method: 'PATCH',
+        body: JSON.stringify({ isLocked }),
+      });
+    },
+
+    deleteUser: async (userId: string): Promise<{ success: boolean; message: string }> => {
+      return request<{ success: boolean; message: string }>(`/api/admin/users/${userId}`, {
+        method: 'DELETE',
+      });
+    },
+
+    restoreUser: async (userId: string): Promise<{ success: boolean; message: string }> => {
+      return request<{ success: boolean; message: string }>(`/api/admin/users/${userId}/restore`, {
+        method: 'POST',
+      });
     },
 
     updateRole: async (userId: string, role: Role): Promise<{ success: boolean; data: AuthUser }> => {
@@ -505,6 +538,45 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ password }),
       });
+    },
+
+    getActivities: async (params?: {
+      page?: number;
+      limit?: number;
+      projectId?: string;
+      action?: string;
+      userId?: string;
+      from?: string;
+      to?: string;
+    }): Promise<{
+      success: boolean;
+      data: ActivityLog[];
+      meta: {
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+      };
+    }> => {
+      const searchParams = new URLSearchParams();
+      if (params?.page) searchParams.set('page', String(params.page));
+      if (params?.limit) searchParams.set('limit', String(params.limit));
+      if (params?.projectId) searchParams.set('projectId', params.projectId);
+      if (params?.action) searchParams.set('action', params.action);
+      if (params?.userId) searchParams.set('userId', params.userId);
+      if (params?.from) searchParams.set('from', params.from);
+      if (params?.to) searchParams.set('to', params.to);
+      const query = searchParams.toString() ? `?${searchParams.toString()}` : '';
+      return request<{
+        success: boolean;
+        data: ActivityLog[];
+        meta: {
+          total: number;
+          page: number;
+          limit: number;
+          totalPages: number;
+        };
+      }>(`/api/admin/activities${query}`);
     },
   },
 
@@ -606,6 +678,9 @@ export interface AdminProject {
   createdBy: string | null;
   createdAt: string;
   updatedAt: string;
+  deletedAt?: string | null;
+  deletedBy?: string | null;
+  isDeleted?: boolean;
   totalLanes: number;
   totalCards: number;
   completedCards: number;
@@ -629,6 +704,10 @@ export interface AdminUser {
   name: string;
   username: string;
   role: Role;
+  isLocked?: boolean;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+  deletedBy?: string | null;
   createdAt: string;
   assignedProjects: Array<{
     id: string;

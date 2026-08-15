@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 import { api, type AuthUser } from '@/lib/api';
 
 interface AuthContextType {
@@ -39,11 +40,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .then((res) => {
         setUser(res.data);
       })
-      .catch(() => {
-        // Token invalid/expired — clear it
+      .catch((err) => {
+        // Token invalid/expired or account locked/deactivated — clear it
         localStorage.removeItem(TOKEN_KEY);
         setToken(null);
         setUser(null);
+        if (err?.message && err.message.includes('locked')) {
+          toast.error(err.message);
+        }
       })
       .finally(() => {
         setIsLoading(false);
