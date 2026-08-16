@@ -3,7 +3,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
-import { Layers, Moon, Sun, ShieldCheck, ArrowRight } from 'lucide-react';
+import Image from 'next/image';
+import { Moon, Sun, ShieldCheck, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth-context';
 import { AccountMenu } from '@/components/account-menu';
@@ -18,9 +19,14 @@ export function Navbar() {
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2.5 font-semibold tracking-tight transition-opacity hover:opacity-90">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-              <Layers className="h-4 w-4" />
-            </div>
+            <Image
+              src="/logo.png"
+              alt="ByteFlow"
+              width={32}
+              height={32}
+              className="h-8 w-8 rounded-lg object-contain shadow-2xs"
+              priority
+            />
             <span className="text-base font-semibold">ByteFlow</span>
           </Link>
         </div>

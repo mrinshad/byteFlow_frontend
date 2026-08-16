@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import {
@@ -144,9 +145,14 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
                 className="flex items-center gap-2.5 min-w-0"
                 title={collapsed ? 'ByteFlow Admin' : undefined}
               >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-                  <Layers className="h-4 w-4" />
-                </div>
+                <Image
+                  src="/logo.png"
+                  alt="ByteFlow"
+                  width={32}
+                  height={32}
+                  className="h-8 w-8 shrink-0 rounded-lg object-contain shadow-2xs"
+                  priority
+                />
                 {!collapsed && (
                   <div className="flex flex-col min-w-0">
                     <span className="text-sm font-bold tracking-tight text-foreground leading-none truncate">ByteFlow</span>

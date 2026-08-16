@@ -2,9 +2,9 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useTheme } from 'next-themes';
 import {
-  Layers,
   Moon,
   Sun,
   ArrowRight,
@@ -87,9 +87,14 @@ export default function HomePage() {
       <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-              <Layers className="h-4 w-4" />
-            </div>
+            <Image
+              src="/logo.png"
+              alt="ByteFlow"
+              width={32}
+              height={32}
+              className="h-8 w-8 rounded-lg object-contain shadow-2xs"
+              priority
+            />
             <span className="text-base font-bold tracking-tight">ByteFlow</span>
           </div>
 
@@ -405,9 +410,13 @@ export default function HomePage() {
       <footer className="border-t border-border/40 bg-muted/20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
-              <Layers className="h-3 w-3" />
-            </div>
+            <Image
+              src="/logo.png"
+              alt="ByteFlow"
+              width={24}
+              height={24}
+              className="h-6 w-6 rounded-md object-contain shadow-2xs"
+            />
             <span className="text-xs font-semibold text-foreground">ByteFlow</span>
           </div>
           <p className="text-[11px] text-muted-foreground">

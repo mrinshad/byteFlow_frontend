@@ -242,6 +242,26 @@ export const api = {
       return request<{ success: boolean; data: AuthUser }>('/api/auth/me');
     },
 
+    getRegistrationStatus: async (): Promise<{
+      success: boolean;
+      data: {
+        isRegistrationAllowed: boolean;
+        currentUsers: number;
+        maxUsers: number;
+        supportEmail: string;
+      };
+    }> => {
+      return request<{
+        success: boolean;
+        data: {
+          isRegistrationAllowed: boolean;
+          currentUsers: number;
+          maxUsers: number;
+          supportEmail: string;
+        };
+      }>('/api/auth/registration-status');
+    },
+
     changePassword: async (data: { currentPassword: string; newPassword: string }): Promise<{ success: boolean; message: string }> => {
       return request<{ success: boolean; message: string }>('/api/auth/change-password', {
         method: 'POST',

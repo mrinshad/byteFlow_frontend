@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Layers, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -55,9 +56,14 @@ export default function LoginPage() {
       <header className="w-full border-b border-border/40 bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link href="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-90">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-              <Layers className="h-4 w-4" />
-            </div>
+            <Image
+              src="/logo.png"
+              alt="ByteFlow"
+              width={32}
+              height={32}
+              className="h-8 w-8 rounded-lg object-contain shadow-2xs"
+              priority
+            />
             <span className="text-base font-bold tracking-tight">ByteFlow</span>
           </Link>
           <Link href="/register">
