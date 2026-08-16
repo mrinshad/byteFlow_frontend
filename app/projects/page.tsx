@@ -136,14 +136,18 @@ export default function ProjectsPage() {
                   <FolderKanban className="h-6 w-6" />
                 </div>
                 <h3 className="mt-4 text-base font-semibold text-foreground">
-                  {search ? 'No matching projects found' : 'No projects yet'}
+                  {search
+                    ? 'No matching projects found'
+                    : canCreate
+                    ? 'No projects yet'
+                    : 'No Projects Assigned'}
                 </h3>
-                <p className="mt-1.5 max-w-sm text-xs text-muted-foreground leading-relaxed">
+                <p className="mt-1.5 max-w-md text-xs text-muted-foreground leading-relaxed">
                   {search
                     ? `No projects matched "${search}". Try adjusting your search query.`
                     : canCreate
                     ? 'Get started by creating your first project to organize lanes and track cards.'
-                    : 'You do not have any projects assigned yet. Contact an administrator to receive project access.'}
+                    : 'You currently have no projects assigned to you. Please ask an Administrator or your Project Manager to create a project or assign you to one.'}
                 </p>
                 {!search && canCreate && (
                   <Button onClick={() => setCreateOpen(true)} className="mt-6 gap-2 shadow-xs">
