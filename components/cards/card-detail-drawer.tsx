@@ -112,6 +112,17 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
     }
   }, [card]);
 
+  // Sync cardId in URL when drawer opens
+  useEffect(() => {
+    if (isDrawerOpen && selectedCardId) {
+      const url = new URL(window.location.href);
+      if (url.searchParams.get('cardId') !== selectedCardId) {
+        url.searchParams.set('cardId', selectedCardId);
+        window.history.replaceState({}, '', url.toString());
+      }
+    }
+  }, [isDrawerOpen, selectedCardId]);
+
   // Update Mutation
   const updateMutation = useMutation({
     mutationFn: (updateData: {
@@ -248,16 +259,6 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
     updateMutation.mutate({ dueDate: newDate ? new Date(newDate).toISOString() : null });
   };
 
-  // Sync cardId in URL when drawer opens
-  useEffect(() => {
-    if (isDrawerOpen && selectedCardId) {
-      const url = new URL(window.location.href);
-      if (url.searchParams.get('cardId') !== selectedCardId) {
-        url.searchParams.set('cardId', selectedCardId);
-        window.history.replaceState({}, '', url.toString());
-      }
-    }
-  }, [isDrawerOpen, selectedCardId]);
 
   const handleCloseDrawer = () => {
     const url = new URL(window.location.href);

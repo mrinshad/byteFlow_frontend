@@ -165,12 +165,10 @@ export function LaneColumn({ lane, cards, projectId }: LaneColumnProps) {
         ref={setNodeRef}
         style={{
           ...style,
-          backgroundColor: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.06)`,
-          borderColor: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15)`,
           borderTopWidth: '3px',
           borderTopColor: laneColor,
         }}
-        className={`flex w-80 shrink-0 max-h-[calc(100vh-140px)] flex-col rounded-xl border p-3 shadow-xs transition-colors duration-150 ${
+        className={`flex w-80 shrink-0 max-h-[calc(100vh-140px)] flex-col rounded-xl border border-border/60 bg-muted/30 p-3 shadow-xs transition-colors duration-150 ${
           isDragging ? 'opacity-40 ring-2 ring-primary/40' : ''
         }`}
       >
@@ -286,10 +284,7 @@ export function LaneColumn({ lane, cards, projectId }: LaneColumnProps) {
         </div>
 
         {/* Cards Sortable Area */}
-        <div
-          className="flex flex-1 flex-col gap-2 overflow-y-auto rounded-lg p-1.5 min-h-[100px]"
-          style={{ backgroundColor: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.03)` }}
-        >
+        <div className="flex flex-1 flex-col gap-2 overflow-y-auto rounded-lg bg-background/40 p-1.5 min-h-[100px]">
           <SortableContext
             items={cards.map((c) => c.id)}
             strategy={verticalListSortingStrategy}

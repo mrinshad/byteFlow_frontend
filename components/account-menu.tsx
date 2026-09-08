@@ -66,9 +66,9 @@ export function AccountMenu() {
 
           <DropdownMenuSeparator />
 
-          {/* Portal Switcher (for Admins) */}
-          {user.role === 'ADMIN' && (
-            <>
+          {/* Portal Switcher – visible in dropdown on mobile only (desktop has standalone button) */}
+          {(user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') && (
+            <div className="sm:hidden">
               {isAdminPortal ? (
                 <DropdownMenuItem
                   render={<Link href="/projects" className="gap-2.5 cursor-pointer text-xs font-medium" />}
@@ -84,7 +84,7 @@ export function AccountMenu() {
                   <span>Admin Portal</span>
                 </DropdownMenuItem>
               )}
-            </>
+            </div>
           )}
 
           {/* Change Password */}
