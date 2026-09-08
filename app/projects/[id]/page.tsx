@@ -64,10 +64,10 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
     <Suspense fallback={null}>
       <CardUrlSync />
     </Suspense>
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col w-full max-w-full overflow-x-clip">
       <Navbar />
 
-      <main className="flex-1 flex flex-col mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
+      <main className="flex-1 flex flex-col mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 min-w-0 overflow-x-clip">
         {/* Navigation & Header */}
         <div className="flex flex-col gap-4 pb-5 border-b border-border/40">
           <div className="flex items-center justify-between">
@@ -121,7 +121,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                 )}
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <div className="flex items-center gap-3 px-3 py-1.5 rounded-lg bg-muted/40 border border-border/50 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1.5">
                     <Layers className="h-3.5 w-3.5 text-primary" />
@@ -180,7 +180,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
 
         {/* Board Canvas with LaneContainer */}
         {!projectLoading && project && (
-          <div className="flex-1 mt-4 flex flex-col">
+          <div className="flex-1 mt-4 flex flex-col min-w-0 w-full overflow-hidden">
             <LaneContainer projectId={projectId} />
           </div>
         )}

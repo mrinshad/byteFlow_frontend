@@ -292,7 +292,7 @@ export function LaneContainer({ projectId }: LaneContainerProps) {
 
   if (lanesLoading || cardsLoading) {
     return (
-      <div className="flex items-start gap-4 overflow-x-auto pb-6">
+      <div className="relative flex items-start gap-4 overflow-x-auto pb-6 min-w-0 w-full overscroll-x-contain">
         {[...Array(3)].map((_, i) => (
           <div
             key={i}
@@ -308,7 +308,7 @@ export function LaneContainer({ projectId }: LaneContainerProps) {
   }
 
   return (
-    <div className="flex-1 flex items-start gap-4 overflow-x-auto pb-6 select-none">
+    <div className="relative flex-1 flex items-start gap-4 overflow-x-auto pb-6 select-none min-w-0 w-full overscroll-x-contain">
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}

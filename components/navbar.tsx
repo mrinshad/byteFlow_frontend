@@ -37,11 +37,13 @@ export function Navbar() {
               <Button
                 size="sm"
                 variant="outline"
+                title="Admin Portal"
+                aria-label="Admin Portal"
                 className="gap-1.5 text-xs font-semibold border-primary/40 bg-primary/5 text-primary hover:bg-primary hover:text-primary-foreground transition-all shadow-2xs"
               >
                 <ShieldCheck className="h-3.5 w-3.5" />
-                <span>Admin Portal</span>
-                <ArrowRight className="h-3 w-3 ml-0.5" />
+                <span className="hidden sm:inline">Admin Portal</span>
+                <ArrowRight className="hidden sm:inline h-3 w-3 ml-0.5" />
               </Button>
             </Link>
           )}
