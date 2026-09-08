@@ -55,14 +55,16 @@ interface LaneColumnProps {
 export function LaneColumn({ lane, cards, projectId }: LaneColumnProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(lane.name);
+  const [prevLaneName, setPrevLaneName] = useState(lane.name);
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
-  useEffect(() => {
+  if (lane.name !== prevLaneName) {
+    setPrevLaneName(lane.name);
     setTitle(lane.name);
-  }, [lane.name]);
+  }
 
   useEffect(() => {
     if (isEditing && inputRef.current) {

@@ -23,7 +23,7 @@ export function ProjectCard({ project, onEdit, onDelete, currentUser }: ProjectC
   const lanesCount = project._count?.lanes ?? 0;
   const cardsCount = project._count?.cards ?? 0;
 
-  const isAdmin = currentUser?.role === 'ADMIN';
+  const isAdmin = currentUser?.role === 'ADMIN' || currentUser?.role === 'SUPER_ADMIN';
   const isCreator = project.createdBy === currentUser?.id;
   const isManager = currentUser?.role === 'MANAGER';
 

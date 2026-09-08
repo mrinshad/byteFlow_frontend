@@ -27,7 +27,17 @@ export function AssignMembersDialog({
   onOpenChange,
 }: AssignMembersDialogProps) {
   const queryClient = useQueryClient();
-  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>(
+    () => project?.members.map((m) => m.userId) || []
+  );
+  const [prevProject, setPrevProject] = useState(project);
+
+  if (project !== prevProject) {
+    setPrevProject(project);
+    if (project) {
+      setSelectedUserIds(project.members.map((m) => m.userId));
+    }
+  }
 
   // Fetch all users
   const { data: usersData, isLoading: usersLoading } = useQuery({
@@ -37,13 +47,6 @@ export function AssignMembersDialog({
   });
 
   const allUsers = usersData?.data || [];
-
-  // Initialize selected members from project
-  useEffect(() => {
-    if (project) {
-      setSelectedUserIds(project.members.map((m) => m.userId));
-    }
-  }, [project]);
 
   const toggleUser = (userId: string) => {
     setSelectedUserIds((prev) =>

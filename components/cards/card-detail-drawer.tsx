@@ -135,7 +135,9 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
     }
   }, [card?.tags]);
 
-  useEffect(() => {
+  const [prevCard, setPrevCard] = useState(card);
+  if (card !== prevCard) {
+    setPrevCard(card);
     if (card) {
       setTitle(card.title);
       setDescription(card.description || '');
@@ -143,7 +145,7 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
       setDueDate(card.dueDate ? card.dueDate.split('T')[0] : '');
       setAssigneeId(card.assigneeId || '');
     }
-  }, [card]);
+  }
 
   // Sync cardId in URL when drawer opens
   useEffect(() => {
@@ -155,6 +157,18 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
       }
     }
   }, [isDrawerOpen, selectedCardId]);
+
+  // Close drawer on Escape key press
+  useEffect(() => {
+    if (!isDrawerOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleCloseDrawer();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isDrawerOpen]);
 
   // Update Mutation
   const updateMutation = useMutation({
@@ -403,7 +417,12 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
       />
 
       {/* Drawer */}
-      <aside className="fixed inset-y-0 right-0 z-50 flex w-full max-w-lg flex-col border-l border-border bg-background shadow-2xl transition-transform duration-200">
+      <aside
+        role="dialog"
+        aria-modal="true"
+        aria-label="Card Details"
+        className="fixed inset-y-0 right-0 z-50 flex w-full max-w-lg flex-col border-l border-border bg-background shadow-2xl transition-transform duration-200"
+      >
         {/* Drawer Header */}
         <div className="flex items-center justify-between border-b border-border/50 px-5 py-3.5">
           <div className="flex items-center gap-2">

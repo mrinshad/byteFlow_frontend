@@ -30,16 +30,18 @@ export function EditProjectDialog({
   onOpenChange,
 }: EditProjectDialogProps) {
   const { user } = useAuth();
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
+  const [name, setName] = useState(project?.name || '');
+  const [description, setDescription] = useState(project?.description || '');
+  const [prevProject, setPrevProject] = useState(project);
   const queryClient = useQueryClient();
 
-  useEffect(() => {
+  if (project !== prevProject) {
+    setPrevProject(project);
     if (project) {
       setName(project.name);
       setDescription(project.description || '');
     }
-  }, [project]);
+  }
 
   const updateMutation = useMutation({
     mutationFn: (data: { name: string; description?: string }) => {
