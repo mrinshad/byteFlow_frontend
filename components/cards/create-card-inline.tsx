@@ -47,6 +47,7 @@ export function CreateCardInline({ projectId, laneId }: CreateCardInlineProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cards', projectId] });
       queryClient.invalidateQueries({ queryKey: ['lanes', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['tags', projectId] });
       queryClient.invalidateQueries({ queryKey: ['project', projectId] });
       resetState();
       if (textareaRef.current) {
