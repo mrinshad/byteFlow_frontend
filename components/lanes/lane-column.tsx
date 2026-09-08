@@ -274,7 +274,10 @@ export function LaneColumn({ lane, cards, projectId }: LaneColumnProps) {
         </div>
 
         {/* Cards Sortable Area */}
-        <div className="flex flex-1 flex-col gap-2 overflow-y-auto rounded-lg bg-background/40 p-1.5 min-h-[100px]">
+        <div
+          className="flex flex-1 flex-col gap-2 overflow-y-auto rounded-lg bg-background/40 p-1.5 min-h-[100px] touch-pan-y"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
           <SortableContext
             items={cards.map((c) => c.id)}
             strategy={verticalListSortingStrategy}

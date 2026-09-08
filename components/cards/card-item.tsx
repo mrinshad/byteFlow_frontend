@@ -132,7 +132,7 @@ export function CardItem({ card, isDone }: CardItemProps) {
       {...attributes}
       {...listeners}
       onClick={() => openCardDrawer(card.id)}
-      className={`group relative flex flex-col gap-2 rounded-lg border p-3 shadow-xs transition-all duration-150 cursor-pointer select-none ${
+      className={`group relative flex flex-col gap-2 rounded-lg border p-3 shadow-xs transition-all duration-150 cursor-pointer select-none touch-pan-y ${
         isDeleted
           ? 'border-dashed border-destructive/40 bg-muted/40 opacity-75'
           : 'border-border/70 bg-card hover:border-border hover:shadow-sm'
