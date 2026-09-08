@@ -192,7 +192,8 @@ export default function AdminRolesPage() {
           <p className="text-xs text-muted-foreground">Cross-role permission breakdown enforced by backend middleware and services</p>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* Desktop Table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="border-b border-border/40 bg-muted/40 text-muted-foreground font-semibold uppercase tracking-wider text-[10px]">
               <tr>
@@ -210,8 +211,6 @@ export default function AdminRolesPage() {
                     <div className="font-bold text-foreground text-xs">{perm.name}</div>
                     <p className="text-[11px] text-muted-foreground mt-0.5">{perm.description}</p>
                   </td>
-
-                  {/* Super Admin */}
                   <td className="px-4 py-4 text-center">
                     {perm.superAdmin ? (
                       <div className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400">
@@ -223,8 +222,6 @@ export default function AdminRolesPage() {
                       </div>
                     )}
                   </td>
-
-                  {/* Admin */}
                   <td className="px-4 py-4 text-center">
                     {perm.admin ? (
                       <div className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
@@ -236,8 +233,6 @@ export default function AdminRolesPage() {
                       </div>
                     )}
                   </td>
-
-                  {/* Manager */}
                   <td className="px-4 py-4 text-center">
                     {perm.manager ? (
                       <div className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
@@ -249,8 +244,6 @@ export default function AdminRolesPage() {
                       </div>
                     )}
                   </td>
-
-                  {/* Member */}
                   <td className="px-4 py-4 text-center">
                     {perm.member ? (
                       <div className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
@@ -266,6 +259,41 @@ export default function AdminRolesPage() {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Cards */}
+        <div className="md:hidden divide-y divide-border/40">
+          {permissions.map((perm, i) => (
+            <div key={i} className="p-4 space-y-2.5">
+              <div>
+                <div className="font-bold text-foreground text-xs">{perm.name}</div>
+                <p className="text-[11px] text-muted-foreground mt-0.5">{perm.description}</p>
+              </div>
+              <div className="flex items-center gap-3 flex-wrap">
+                {([
+                  { label: 'Super Admin', allowed: perm.superAdmin, color: 'purple' },
+                  { label: 'Admin', allowed: perm.admin, color: 'emerald' },
+                  { label: 'Manager', allowed: perm.manager, color: 'emerald' },
+                  { label: 'Member', allowed: perm.member, color: 'emerald' },
+                ] as const).map((role) => (
+                  <div key={role.label} className="flex items-center gap-1">
+                    {role.allowed ? (
+                      <div className={`inline-flex h-4 w-4 items-center justify-center rounded-full ${role.color === 'purple' ? 'bg-purple-500/15 text-purple-600 dark:text-purple-400' : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'}`}>
+                        <Check className="h-2.5 w-2.5" />
+                      </div>
+                    ) : (
+                      <div className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-muted text-muted-foreground/40">
+                        <X className="h-2.5 w-2.5" />
+                      </div>
+                    )}
+                    <span className={`text-[10px] font-medium ${role.allowed ? 'text-foreground' : 'text-muted-foreground/50'}`}>
+                      {role.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

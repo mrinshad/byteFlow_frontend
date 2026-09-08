@@ -194,7 +194,8 @@ export default function AdminActivitiesPage() {
 
       {/* Activities Table */}
       <div className="rounded-xl border border-border/60 bg-card shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop Table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="border-b border-border/40 bg-muted/40 text-muted-foreground font-semibold uppercase tracking-wider text-[10px]">
               <tr>
@@ -225,12 +226,9 @@ export default function AdminActivitiesPage() {
               ) : (
                 activities.map((act) => (
                   <tr key={act.id} className="hover:bg-muted/20 transition-colors">
-                    {/* Timestamp */}
                     <td className="px-6 py-3.5 text-muted-foreground whitespace-nowrap text-[11px] font-mono">
                       {formatTimestamp(act.createdAt)}
                     </td>
-
-                    {/* Actor */}
                     <td className="px-4 py-3.5 font-semibold text-foreground whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
                         <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[9px] font-bold text-primary">
@@ -239,30 +237,17 @@ export default function AdminActivitiesPage() {
                         <span>{act.performedBy || 'System'}</span>
                       </div>
                     </td>
-
-                    {/* Action Badge */}
                     <td className="px-4 py-3.5 whitespace-nowrap">
-                      <span
-                        className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border ${getActionBadge(
-                          act.action
-                        )}`}
-                      >
+                      <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border ${getActionBadge(act.action)}`}>
                         {formatActionText(act.action)}
                       </span>
                     </td>
-
-                    {/* Details */}
                     <td className="px-6 py-3.5 text-foreground">
                       <p className="line-clamp-1 font-medium">{formatActivitySummary(act)}</p>
                     </td>
-
-                    {/* Project */}
                     <td className="px-6 py-3.5 whitespace-nowrap">
                       {act.project ? (
-                        <Link
-                          href={`/projects/${act.project.id}`}
-                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
-                        >
+                        <Link href={`/projects/${act.project.id}`} className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline">
                           <FolderKanban className="h-3 w-3" />
                           <span>{act.project.name}</span>
                         </Link>
@@ -275,6 +260,57 @@ export default function AdminActivitiesPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Cards */}
+        <div className="md:hidden divide-y divide-border/40">
+          {isLoading ? (
+            Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="p-4 space-y-2">
+                <Skeleton className="h-5 w-1/2" />
+                <Skeleton className="h-4 w-full" />
+              </div>
+            ))
+          ) : activities.length === 0 ? (
+            <div className="px-4 py-12 text-center text-muted-foreground">
+              <History className="mx-auto h-8 w-8 text-muted-foreground/40 mb-2" />
+              <p className="text-sm font-semibold text-foreground">No activity logs recorded</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Try clearing selected filters</p>
+            </div>
+          ) : (
+            activities.map((act) => (
+              <div key={act.id} className="p-4 space-y-2">
+                {/* Header: Action badge + Actor */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border ${getActionBadge(act.action)}`}>
+                    {formatActionText(act.action)}
+                  </span>
+                  <div className="flex items-center gap-1.5 text-xs">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[9px] font-bold text-primary">
+                      {(act.performedBy || 'System').charAt(0).toUpperCase()}
+                    </span>
+                    <span className="font-semibold text-foreground">{act.performedBy || 'System'}</span>
+                  </div>
+                </div>
+
+                {/* Event Details */}
+                <p className="text-xs font-medium text-foreground">{formatActivitySummary(act)}</p>
+
+                {/* Footer: Project + Timestamp */}
+                <div className="flex items-center justify-between gap-2 text-[11px]">
+                  {act.project ? (
+                    <Link href={`/projects/${act.project.id}`} className="inline-flex items-center gap-1 font-semibold text-primary hover:underline">
+                      <FolderKanban className="h-3 w-3" />
+                      <span>{act.project.name}</span>
+                    </Link>
+                  ) : (
+                    <span className="text-muted-foreground/60">Workspace</span>
+                  )}
+                  <span className="text-muted-foreground font-mono text-[10px]">{formatTimestamp(act.createdAt)}</span>
+                </div>
+              </div>
+            ))
+          )}
         </div>
 
         {/* Pagination Footer */}

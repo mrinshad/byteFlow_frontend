@@ -143,7 +143,8 @@ export default function AdminDashboardPage() {
           </Link>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* Desktop Table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="border-b border-border/40 bg-muted/40 text-muted-foreground font-semibold uppercase tracking-wider text-[10px]">
               <tr>
@@ -227,6 +228,80 @@ export default function AdminDashboardPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Cards */}
+        <div className="md:hidden divide-y divide-border/40">
+          {projectsLoading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="p-4 space-y-3">
+                <Skeleton className="h-5 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-3 w-full" />
+              </div>
+            ))
+          ) : projects.length === 0 ? (
+            <div className="px-4 py-10 text-center text-sm text-muted-foreground">
+              No projects found in system
+            </div>
+          ) : (
+            projects.map((project) => (
+              <div key={project.id} className="p-4 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="font-bold text-foreground text-sm">{project.name}</div>
+                    {project.description && (
+                      <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">{project.description}</p>
+                    )}
+                  </div>
+                  <Link href={`/projects/${project.id}`} className="shrink-0">
+                    <Button size="xs" variant="outline" className="h-7 text-xs gap-1">
+                      <span>Open</span>
+                      <ExternalLink className="h-3 w-3" />
+                    </Button>
+                  </Link>
+                </div>
+
+                {/* Progress */}
+                <div className="flex items-center gap-2.5">
+                  <div className="h-2 flex-1 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full bg-primary rounded-full transition-all duration-300"
+                      style={{ width: `${project.completionPercentage}%` }}
+                    />
+                  </div>
+                  <span className="text-xs font-bold text-foreground shrink-0">{project.completionPercentage}%</span>
+                </div>
+
+                {/* Stats Row */}
+                <div className="flex items-center gap-4 text-[11px]">
+                  <span className="text-muted-foreground">
+                    <span className="font-semibold text-foreground">{project.totalLanes}</span> lanes
+                  </span>
+                  <span className="text-muted-foreground">
+                    <span className="font-semibold text-foreground">{project.totalCards}</span> tasks
+                  </span>
+                  <span className="text-muted-foreground">
+                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">{project.completedCards}</span> done
+                  </span>
+                </div>
+
+                {/* Members */}
+                {project.members.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {project.members.map((m) => (
+                      <span
+                        key={m.userId}
+                        className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground"
+                      >
+                        {m.user.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

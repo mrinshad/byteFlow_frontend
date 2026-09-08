@@ -178,9 +178,9 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
           </div>
         )}
 
-        {/* Board Canvas with LaneContainer */}
+        {/* Board Canvas – breaks out of max-w container so horizontal scroll reaches viewport edges */}
         {!projectLoading && project && (
-          <div className="flex-1 mt-4 flex flex-col min-w-0 w-full overflow-hidden">
+          <div className="flex-1 mt-4 flex flex-col min-w-0 -mx-4 sm:-mx-6 overflow-hidden">
             <LaneContainer projectId={projectId} />
           </div>
         )}
