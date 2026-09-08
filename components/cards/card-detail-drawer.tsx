@@ -13,6 +13,7 @@ import {
   Check,
   History,
   Search,
+  Share2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api, type Card, type Priority, type Lane, type Tag } from '@/lib/api';
@@ -88,9 +89,17 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
     enabled: isDrawerOpen,
   });
 
+  // Fetch project details for members
+  const { data: projectData } = useQuery({
+    queryKey: ['project', projectId],
+    queryFn: () => api.projects.getById(projectId),
+    enabled: isDrawerOpen,
+  });
+
   const card = data?.data;
   const lanes = lanesData?.data || [];
   const projectTags = tagsData?.data || [];
+  const projectMembers = projectData?.data?.members || [];
   const assignedTags = card?.tags?.map((t) => t.tag) || [];
 
   useEffect(() => {
@@ -239,9 +248,43 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
     updateMutation.mutate({ dueDate: newDate ? new Date(newDate).toISOString() : null });
   };
 
-  const handleAssigneeBlur = () => {
-    if (assigneeId.trim() !== (card?.assigneeId || '')) {
-      updateMutation.mutate({ assigneeId: assigneeId.trim() || null });
+  // Sync cardId in URL when drawer opens
+  useEffect(() => {
+    if (isDrawerOpen && selectedCardId) {
+      const url = new URL(window.location.href);
+      if (url.searchParams.get('cardId') !== selectedCardId) {
+        url.searchParams.set('cardId', selectedCardId);
+        window.history.replaceState({}, '', url.toString());
+      }
+    }
+  }, [isDrawerOpen, selectedCardId]);
+
+  const handleCloseDrawer = () => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.has('cardId')) {
+      url.searchParams.delete('cardId');
+      window.history.replaceState({}, '', url.toString());
+    }
+    closeCardDrawer();
+  };
+
+  const handleShareCard = async () => {
+    if (!selectedCardId) return;
+    const url = `${window.location.origin}/projects/${projectId}?cardId=${selectedCardId}`;
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = url;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      toast.success('Card link copied to clipboard');
+    } catch {
+      toast.error('Failed to copy link');
     }
   };
 
@@ -285,7 +328,7 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
     <>
       {/* Backdrop */}
       <div
-        onClick={closeCardDrawer}
+        onClick={handleCloseDrawer}
         className="fixed inset-0 z-40 bg-black/20 backdrop-blur-xs transition-opacity"
       />
 
@@ -304,6 +347,16 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
             <Button
               variant="ghost"
               size="icon-xs"
+              onClick={handleShareCard}
+              className="text-muted-foreground hover:text-foreground cursor-pointer"
+              title="Share card link"
+              aria-label="Share card link"
+            >
+              <Share2 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-xs"
               onClick={() => setDeleteOpen(true)}
               className="text-muted-foreground hover:text-destructive"
               title="Delete card"
@@ -313,7 +366,7 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
             <Button
               variant="ghost"
               size="icon-xs"
-              onClick={closeCardDrawer}
+              onClick={handleCloseDrawer}
               className="text-muted-foreground hover:text-foreground"
             >
               <X className="h-4 w-4" />
@@ -557,14 +610,22 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
                   <User className="h-3 w-3" />
                   <span>Assignee</span>
                 </label>
-                <Input
-                  placeholder="e.g. john_doe"
+                <select
                   value={assigneeId}
-                  onChange={(e) => setAssigneeId(e.target.value)}
-                  onBlur={handleAssigneeBlur}
-                  onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
-                  className="mt-1 h-8 text-xs"
-                />
+                  onChange={(e) => {
+                    const newId = e.target.value;
+                    setAssigneeId(newId);
+                    updateMutation.mutate({ assigneeId: newId || null });
+                  }}
+                  className="mt-1 w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+                >
+                  <option value="">Unassigned</option>
+                  {projectMembers.map((m) => (
+                    <option key={m.userId} value={m.userId}>
+                      {m.user?.name || m.user?.username || m.userId} (@{m.user?.username || 'member'})
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 

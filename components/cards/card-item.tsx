@@ -3,10 +3,10 @@
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Calendar, MessageSquare, RotateCcw } from 'lucide-react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Calendar, MessageSquare, RotateCcw, Share2, User } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { api, type Card, type Priority } from '@/lib/api';
+import { api, type Card, type Priority, type ProjectMember } from '@/lib/api';
 import { useBoardStore } from '@/lib/store/use-board-store';
 import { TagBadge } from '@/components/tags/tag-badge';
 import { Button } from '@/components/ui/button';
@@ -55,6 +55,26 @@ export function CardItem({ card, isDone }: CardItemProps) {
     isDone ?? (card.lane?.name ? isDoneLane(card.lane.name) : false);
 
   const isDeleted = !!card.deletedAt;
+
+  // Fetch project members to resolve assignee name and initials
+  const { data: projectData } = useQuery({
+    queryKey: ['project', card.projectId],
+    queryFn: () => api.projects.getById(card.projectId),
+    enabled: !!card.projectId && !!card.assigneeId,
+  });
+
+  const member = projectData?.data?.members?.find(
+    (m: ProjectMember) => m.userId === card.assigneeId || m.user?.id === card.assigneeId
+  );
+  const assigneeName = member?.user?.name || member?.user?.username || null;
+  const assigneeInitials = assigneeName
+    ? assigneeName
+        .split(' ')
+        .map((n: string) => n[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase()
+    : null;
 
   const restoreMutation = useMutation({
     mutationFn: () => api.cards.restore(card.id),
@@ -118,38 +138,59 @@ export function CardItem({ card, isDone }: CardItemProps) {
           : 'border-border/70 bg-card hover:border-border hover:shadow-sm'
       } ${isDragging ? 'opacity-30 ring-2 ring-primary/50' : ''}`}
     >
-      {/* Header: Deleted Banner or Tag Badges */}
+      {/* Header: Deleted Banner or Tag Badges & Share Option */}
       <div className="flex items-center justify-between gap-1.5 flex-wrap">
         {isDeleted ? (
           <span className="rounded bg-rose-500/10 px-1.5 py-0.5 text-[9px] font-bold text-rose-500 uppercase tracking-wider border border-rose-500/20">
             Deleted / Archived
           </span>
+        ) : tags.length > 0 ? (
+          <div className="flex flex-wrap items-center gap-1">
+            {tags.map((tag) => (
+              <TagBadge key={tag.id} tag={tag} size="xs" />
+            ))}
+          </div>
         ) : (
-          tags.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1">
-              {tags.map((tag) => (
-                <TagBadge key={tag.id} tag={tag} size="xs" />
-              ))}
-            </div>
-          )
+          <div />
         )}
 
-        {isDeleted && (
+        <div className="flex items-center gap-1 ml-auto">
           <Button
             size="icon-xs"
             variant="ghost"
             onClick={(e) => {
               e.stopPropagation();
-              restoreMutation.mutate();
+              const origin =
+                typeof window !== 'undefined' ? window.location.origin : '';
+              const shareUrl = `${origin}/projects/${card.projectId}?cardId=${card.id}`;
+              if (navigator.clipboard?.writeText) {
+                navigator.clipboard.writeText(shareUrl);
+                toast.success('Card link copied to clipboard!');
+              }
             }}
-            disabled={restoreMutation.isPending}
-            className="h-5 px-1.5 gap-1 text-[10px] font-semibold text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
-            title="Restore deleted card"
+            className="h-5 w-5 text-muted-foreground hover:text-foreground opacity-60 hover:opacity-100 transition-opacity"
+            title="Share card link"
           >
-            <RotateCcw className="h-3 w-3" />
-            <span>Restore</span>
+            <Share2 className="h-3 w-3" />
           </Button>
-        )}
+
+          {isDeleted && (
+            <Button
+              size="icon-xs"
+              variant="ghost"
+              onClick={(e) => {
+                e.stopPropagation();
+                restoreMutation.mutate();
+              }}
+              disabled={restoreMutation.isPending}
+              className="h-5 px-1.5 gap-1 text-[10px] font-semibold text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+              title="Restore deleted card"
+            >
+              <RotateCcw className="h-3 w-3" />
+              <span>Restore</span>
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Title */}
@@ -208,10 +249,10 @@ export function CardItem({ card, isDone }: CardItemProps) {
           {/* Assignee Avatar */}
           {card.assigneeId && (
             <span
-              className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary ring-1 ring-primary/20"
-              title={`Assigned to ${card.assigneeId}`}
+              className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[9px] font-bold text-primary ring-1 ring-primary/20"
+              title={assigneeName ? `Assigned to ${assigneeName}` : 'Assigned member'}
             >
-              {card.assigneeId.slice(0, 2).toUpperCase()}
+              {assigneeInitials || <User className="h-3 w-3" />}
             </span>
           )}
         </div>

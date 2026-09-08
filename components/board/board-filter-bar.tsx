@@ -3,7 +3,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Search, X, Filter, RotateCcw } from 'lucide-react';
-import { api, type Priority, type Tag } from '@/lib/api';
+import { api, type Priority, type Tag, type ProjectMember } from '@/lib/api';
 import { useBoardStore, type DueDateFilterOption } from '@/lib/store/use-board-store';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -55,8 +55,22 @@ export function BoardFilterBar({ projectId }: BoardFilterBarProps) {
     queryFn: () => api.cards.listByProject(projectId),
   });
 
+  // Fetch project to resolve assignee names
+  const { data: projectData } = useQuery({
+    queryKey: ['project', projectId],
+    queryFn: () => api.projects.getById(projectId),
+  });
+
   const tags = tagsData?.data || [];
   const cards = cardsData?.data || [];
+  const members = projectData?.data?.members || [];
+
+  const getAssigneeLabel = (id: string) => {
+    const member = members.find((m: ProjectMember) => m.userId === id || m.user?.id === id);
+    if (member?.user?.name) return member.user.name;
+    if (member?.user?.username) return `@${member.user.username}`;
+    return id;
+  };
 
   // Extract unique active assignees from project cards
   const assignees = Array.from(
@@ -132,7 +146,7 @@ export function BoardFilterBar({ projectId }: BoardFilterBarProps) {
           <option value="ALL">All Assignees</option>
           {assignees.map((a) => (
             <option key={a} value={a}>
-              {a}
+              {getAssigneeLabel(a)}
             </option>
           ))}
         </select>
@@ -213,7 +227,7 @@ export function BoardFilterBar({ projectId }: BoardFilterBarProps) {
 
           {assigneeId !== 'ALL' && (
             <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-[11px] text-foreground font-medium border border-border/60">
-              <span>Assignee: {assigneeId}</span>
+              <span>Assignee: {getAssigneeLabel(assigneeId)}</span>
               <button
                 type="button"
                 onClick={() => setAssigneeId('ALL')}

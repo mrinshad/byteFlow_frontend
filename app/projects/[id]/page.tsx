@@ -1,7 +1,8 @@
 'use client';
 
-import React, { use, useState } from 'react';
+import React, { use, useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Layers, History, BarChart3, Wifi, WifiOff, Eye, EyeOff } from 'lucide-react';
 import { api } from '@/lib/api';
@@ -17,6 +18,20 @@ import { ProjectActivityDialog } from '@/components/activities/project-activity-
 import { ProjectInsightsDialog } from '@/components/dashboard/project-insights-dialog';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+
+function CardUrlSync() {
+  const searchParams = useSearchParams();
+  const openCardDrawer = useBoardStore((state) => state.openCardDrawer);
+
+  useEffect(() => {
+    const cardId = searchParams.get('cardId');
+    if (cardId) {
+      openCardDrawer(cardId);
+    }
+  }, [searchParams, openCardDrawer]);
+
+  return null;
+}
 
 export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -46,6 +61,9 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
 
   return (
     <AuthGuard>
+    <Suspense fallback={null}>
+      <CardUrlSync />
+    </Suspense>
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
 
