@@ -16,6 +16,7 @@ import { LaneContainer } from '@/components/lanes/lane-container';
 import { CardDetailDrawer } from '@/components/cards/card-detail-drawer';
 import { ProjectActivityDialog } from '@/components/activities/project-activity-dialog';
 import { ProjectInsightsDialog } from '@/components/dashboard/project-insights-dialog';
+import { ProjectMembersSection } from '@/components/projects/project-members-section';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -148,6 +149,8 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                   <History className="h-3.5 w-3.5" />
                   <span>Activity</span>
                 </Button>
+
+                <ProjectMembersSection projectId={projectId} />
 
                 {/* Show/Hide Deleted Cards (for Managers & Admins) */}
                 {canManageCards && (

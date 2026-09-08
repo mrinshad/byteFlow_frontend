@@ -48,6 +48,17 @@ export interface ProjectMember {
   };
 }
 
+export interface ProjectMemberSummary {
+  id: string;
+  userId: string;
+  name: string;
+  username: string;
+  role: Role;
+  assignedCardsCount: number;
+  hasBreachedCard: boolean;
+  breachedCardsCount: number;
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -283,6 +294,10 @@ export const api = {
 
     getById: async (id: string): Promise<ProjectDetailResponse> => {
       return request<ProjectDetailResponse>(`/api/projects/${id}`);
+    },
+
+    getMembersSummary: async (id: string): Promise<{ success: boolean; data: ProjectMemberSummary[] }> => {
+      return request<{ success: boolean; data: ProjectMemberSummary[] }>(`/api/projects/${id}/members-summary`);
     },
 
     create: async (data: { name: string; description?: string }): Promise<{ success: boolean; data: Project }> => {
