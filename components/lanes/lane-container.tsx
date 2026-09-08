@@ -21,6 +21,7 @@ import {
 import { Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { api, type Lane, type Card } from '@/lib/api';
+import { isDoneLane } from '@/lib/utils';
 import { useBoardStore } from '@/lib/store/use-board-store';
 import { LaneColumn } from '@/components/lanes/lane-column';
 import { CardItem } from '@/components/cards/card-item';
@@ -333,7 +334,10 @@ export function LaneContainer({ projectId }: LaneContainerProps) {
         <DragOverlay>
           {activeCard && (
             <div className="rotate-2 scale-105 shadow-xl">
-              <CardItem card={activeCard} />
+              <CardItem
+                card={activeCard}
+                isDone={isDoneLane(lanes.find((l) => l.id === activeCard.laneId)?.name)}
+              />
             </div>
           )}
         </DragOverlay>

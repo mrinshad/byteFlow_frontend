@@ -14,6 +14,7 @@ import {
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { api, type Lane, type Card } from '@/lib/api';
+import { isDoneLane } from '@/lib/utils';
 import { CardItem } from '@/components/cards/card-item';
 import { CreateCardInline } from '@/components/cards/create-card-inline';
 import { Button } from '@/components/ui/button';
@@ -146,6 +147,7 @@ export function LaneColumn({ lane, cards, projectId }: LaneColumnProps) {
   };
 
   const laneColor = lane.color || '#64748b';
+  const isDone = isDoneLane(lane.name);
 
   return (
     <>
@@ -274,7 +276,7 @@ export function LaneColumn({ lane, cards, projectId }: LaneColumnProps) {
             strategy={verticalListSortingStrategy}
           >
             {cards.map((card) => (
-              <CardItem key={card.id} card={card} />
+              <CardItem key={card.id} card={card} isDone={isDone} />
             ))}
           </SortableContext>
 

@@ -10,9 +10,11 @@ import { api, type Card, type Priority } from '@/lib/api';
 import { useBoardStore } from '@/lib/store/use-board-store';
 import { TagBadge } from '@/components/tags/tag-badge';
 import { Button } from '@/components/ui/button';
+import { isDoneLane } from '@/lib/utils';
 
 interface CardItemProps {
   card: Card;
+  isDone?: boolean;
 }
 
 const PRIORITY_CONFIG: Record<
@@ -45,9 +47,12 @@ const PRIORITY_CONFIG: Record<
   },
 };
 
-export function CardItem({ card }: CardItemProps) {
+export function CardItem({ card, isDone }: CardItemProps) {
   const openCardDrawer = useBoardStore((state) => state.openCardDrawer);
   const queryClient = useQueryClient();
+
+  const isCardDone =
+    isDone ?? (card.lane?.name ? isDoneLane(card.lane.name) : false);
 
   const isDeleted = !!card.deletedAt;
 
@@ -176,7 +181,7 @@ export function CardItem({ card }: CardItemProps) {
           </span>
 
           {/* Due Date */}
-          {formattedDueDate && (
+          {!isCardDone && formattedDueDate && (
             <span
               className={`inline-flex items-center gap-1 text-[10px] ${
                 isOverdue
