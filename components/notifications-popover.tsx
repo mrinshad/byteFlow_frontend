@@ -192,7 +192,7 @@ export function NotificationsPopover() {
 
       {/* Popover Card */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-xl border border-border/80 bg-popover/95 backdrop-blur-md p-0 shadow-lg text-popover-foreground z-50 animate-in fade-in-0 zoom-in-95 origin-top-right">
+        <div className="fixed inset-x-3 top-16 sm:absolute sm:inset-auto sm:right-0 sm:top-auto sm:mt-2 w-auto sm:w-96 max-w-sm sm:max-w-none mx-auto sm:mx-0 rounded-xl border border-border/80 bg-popover/95 backdrop-blur-md p-0 shadow-xl text-popover-foreground z-50 animate-in fade-in-0 zoom-in-95 origin-top-right">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-border/50 px-4 py-3">
             <div className="flex items-center gap-2">

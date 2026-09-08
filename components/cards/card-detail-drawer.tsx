@@ -12,6 +12,7 @@ import {
   Plus,
   Check,
   History,
+  Search,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api, type Card, type Priority, type Lane, type Tag } from '@/lib/api';
@@ -61,6 +62,7 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
 
   // Tag Popover State
   const [tagPickerOpen, setTagPickerOpen] = useState(false);
+  const [tagSearch, setTagSearch] = useState('');
   const [newTagName, setNewTagName] = useState('');
   const [newTagColor, setNewTagColor] = useState(TAG_COLOR_PRESETS[0]);
   const [isCreatingTag, setIsCreatingTag] = useState(false);
@@ -247,6 +249,24 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
     e.preventDefault();
     const trimmed = newTagName.trim();
     if (!trimmed) return;
+
+    // Reuse existing project tag if name matches (case-insensitive)
+    const existing = projectTags.find(
+      (t) => t.name.toLowerCase() === trimmed.toLowerCase()
+    );
+
+    if (existing) {
+      if (!isTagAssigned(existing.id)) {
+        assignTagMutation.mutate(existing.id);
+        toast.success(`Tag "${existing.name}" assigned`);
+      } else {
+        toast.info(`Tag "${existing.name}" is already assigned`);
+      }
+      setNewTagName('');
+      setIsCreatingTag(false);
+      return;
+    }
+
     createTagMutation.mutate({ name: trimmed, color: newTagColor });
   };
 
@@ -354,28 +374,52 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
                         </Button>
                       </div>
 
+                      {/* Tag Search / Filter Input */}
+                      {projectTags.length > 2 && (
+                        <div className="pt-2 pb-1 relative">
+                          <Search className="absolute left-2 top-3.5 h-3 w-3 text-muted-foreground" />
+                          <Input
+                            placeholder="Filter project tags..."
+                            value={tagSearch}
+                            onChange={(e) => setTagSearch(e.target.value)}
+                            className="h-6 text-[11px] pl-6 pr-2"
+                          />
+                        </div>
+                      )}
+
                       {/* Existing Project Tags */}
                       <div className="py-2 max-h-36 overflow-y-auto space-y-1">
                         {projectTags.length === 0 ? (
                           <div className="text-[11px] text-muted-foreground/70 py-1">
                             No tags yet. Create one below.
                           </div>
-                        ) : (
-                          projectTags.map((tag) => {
-                            const assigned = isTagAssigned(tag.id);
-                            return (
-                              <button
-                                key={tag.id}
-                                type="button"
-                                onClick={() => toggleTag(tag)}
-                                className="flex w-full items-center justify-between rounded-md px-2 py-1 text-left text-xs transition-colors hover:bg-muted/50"
-                              >
-                                <TagBadge tag={tag} size="xs" />
-                                {assigned && <Check className="h-3.5 w-3.5 text-primary" />}
-                              </button>
+                        ) : (() => {
+                            const filtered = projectTags.filter((t) =>
+                              t.name.toLowerCase().includes(tagSearch.trim().toLowerCase())
                             );
-                          })
-                        )}
+                            if (filtered.length === 0) {
+                              return (
+                                <div className="text-[11px] text-muted-foreground/70 py-1 text-center">
+                                  No tags matching &quot;{tagSearch}&quot;
+                                </div>
+                              );
+                            }
+                            return filtered.map((tag) => {
+                              const assigned = isTagAssigned(tag.id);
+                              return (
+                                <button
+                                  key={tag.id}
+                                  type="button"
+                                  onClick={() => toggleTag(tag)}
+                                  className="flex w-full items-center justify-between rounded-md px-2 py-1 text-left text-xs transition-colors hover:bg-muted/50 cursor-pointer"
+                                >
+                                  <TagBadge tag={tag} size="xs" />
+                                  {assigned && <Check className="h-3.5 w-3.5 text-primary" />}
+                                </button>
+                              );
+                            });
+                          })()
+                        }
                       </div>
 
                       {/* Create New Tag */}

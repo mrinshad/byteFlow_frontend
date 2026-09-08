@@ -93,7 +93,7 @@ export function CreateCardInline({ projectId, laneId }: CreateCardInlineProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-1 flex flex-col gap-2 rounded-lg border border-border/80 bg-card p-2.5 shadow-xs">
+    <form onSubmit={handleSubmit} className="mt-1 flex flex-col gap-2 rounded-lg border border-border/80 bg-card p-2.5 shadow-xs overflow-hidden">
       <Textarea
         ref={textareaRef}
         placeholder="Enter a title for this card..."
@@ -115,8 +115,8 @@ export function CreateCardInline({ projectId, laneId }: CreateCardInlineProps) {
       )}
 
       {/* Priority & Options Bar */}
-      <div className="flex items-center justify-between gap-1 pt-1 border-t border-border/40">
-        <div className="flex items-center gap-1.5">
+      <div className="flex flex-wrap items-center justify-between gap-1.5 pt-1.5 border-t border-border/40">
+        <div className="flex items-center gap-1.5 shrink-0">
           {/* Priority Select */}
           <select
             value={priority}
@@ -125,10 +125,10 @@ export function CreateCardInline({ projectId, laneId }: CreateCardInlineProps) {
             className="h-6 rounded border border-border/60 bg-background px-1.5 text-[10px] font-semibold text-foreground cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary"
             title="Set card priority"
           >
-            <option value="LOW">Low Priority</option>
-            <option value="MEDIUM">Medium Priority</option>
-            <option value="HIGH">High Priority</option>
-            <option value="CRITICAL">Critical Priority</option>
+            <option value="LOW">Low</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="HIGH">High</option>
+            <option value="CRITICAL">Critical</option>
           </select>
 
           {/* Toggle Description Field */}
@@ -136,7 +136,7 @@ export function CreateCardInline({ projectId, laneId }: CreateCardInlineProps) {
             <button
               type="button"
               onClick={() => setShowDesc(true)}
-              className="flex h-6 items-center gap-1 rounded px-1.5 text-[10px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              className="flex h-6 items-center gap-1 rounded px-1.5 text-[10px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
               title="Add description"
             >
               <AlignLeft className="h-3 w-3" />
@@ -145,7 +145,7 @@ export function CreateCardInline({ projectId, laneId }: CreateCardInlineProps) {
           )}
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 shrink-0 ml-auto">
           <Button
             type="button"
             variant="ghost"
@@ -163,7 +163,7 @@ export function CreateCardInline({ projectId, laneId }: CreateCardInlineProps) {
             type="submit"
             size="xs"
             disabled={createMutation.isPending || !title.trim()}
-            className="h-6 px-2.5 text-xs"
+            className="h-6 px-2.5 text-xs min-w-[48px] justify-center"
           >
             {createMutation.isPending ? 'Adding...' : 'Add'}
           </Button>

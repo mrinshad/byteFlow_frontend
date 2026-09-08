@@ -22,10 +22,10 @@ export default function ProjectsPage() {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [deletingProject, setDeletingProject] = useState<Project | null>(null);
 
-  const canCreate = user?.role === 'ADMIN' || user?.role === 'MANAGER';
+  const canCreate = Boolean(user?.role && user.role !== 'MEMBER');
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['projects', search],
+    queryKey: ['projects', search, user?.id],
     queryFn: () => api.projects.list({ search: search.trim() || undefined }),
   });
 

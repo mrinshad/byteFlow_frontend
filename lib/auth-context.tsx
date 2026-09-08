@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { api, type AuthUser } from '@/lib/api';
 
@@ -19,6 +20,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const TOKEN_KEY = 'byteflow_token';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -58,23 +60,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const res = await api.auth.login({ username, password });
     const { user: userData, token: newToken } = res.data;
     localStorage.setItem(TOKEN_KEY, newToken);
+    queryClient.clear();
     setToken(newToken);
     setUser(userData);
-  }, []);
+  }, [queryClient]);
 
   const register = useCallback(async (name: string, username: string, password: string) => {
     const res = await api.auth.register({ name, username, password });
     const { user: userData, token: newToken } = res.data;
     localStorage.setItem(TOKEN_KEY, newToken);
+    queryClient.clear();
     setToken(newToken);
     setUser(userData);
-  }, []);
+  }, [queryClient]);
 
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY);
+    queryClient.clear();
     setToken(null);
     setUser(null);
-  }, []);
+  }, [queryClient]);
 
   return (
     <AuthContext.Provider
