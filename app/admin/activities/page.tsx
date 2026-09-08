@@ -263,23 +263,26 @@ export default function AdminActivitiesPage() {
         </div>
 
         {/* Mobile Cards */}
-        <div className="md:hidden divide-y divide-border/40">
+        <div data-role="responsive-table-cards" className="md:hidden p-3 space-y-2.5 bg-muted/15">
           {isLoading ? (
             Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="p-4 space-y-2">
+              <div key={i} className="rounded-xl border border-border/60 bg-card p-3.5 space-y-2 shadow-xs">
                 <Skeleton className="h-5 w-1/2" />
                 <Skeleton className="h-4 w-full" />
               </div>
             ))
           ) : activities.length === 0 ? (
-            <div className="px-4 py-12 text-center text-muted-foreground">
+            <div className="rounded-xl border border-border/60 bg-card px-4 py-12 text-center text-muted-foreground">
               <History className="mx-auto h-8 w-8 text-muted-foreground/40 mb-2" />
               <p className="text-sm font-semibold text-foreground">No activity logs recorded</p>
               <p className="text-xs text-muted-foreground mt-0.5">Try clearing selected filters</p>
             </div>
           ) : (
             activities.map((act) => (
-              <div key={act.id} className="p-4 space-y-2">
+              <div
+                key={act.id}
+                className="rounded-xl border border-border/60 bg-card p-3.5 space-y-2 shadow-xs transition-colors hover:border-border"
+              >
                 {/* Header: Action badge + Actor */}
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border ${getActionBadge(act.action)}`}>

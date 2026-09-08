@@ -84,8 +84,9 @@ export function CreateCardInline({ projectId, laneId }: CreateCardInlineProps) {
     return (
       <button
         type="button"
+        data-role="create-card-button"
         onClick={() => setIsOpen(true)}
-        className="mt-1 flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-background/80 hover:text-foreground cursor-pointer"
+        className="flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-background/80 hover:text-foreground cursor-pointer"
       >
         <Plus className="h-3.5 w-3.5" />
         <span>Add card</span>
@@ -94,7 +95,11 @@ export function CreateCardInline({ projectId, laneId }: CreateCardInlineProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-1 flex flex-col gap-2 rounded-lg border border-border/80 bg-card p-2.5 shadow-xs overflow-hidden">
+    <form
+      onSubmit={handleSubmit}
+      data-role="create-card-form"
+      className="flex flex-col gap-2 rounded-lg border border-border/80 bg-card p-2.5 shadow-xs overflow-hidden mb-1"
+    >
       <Textarea
         ref={textareaRef}
         placeholder="Enter a title for this card..."

@@ -231,22 +231,25 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Mobile Cards */}
-        <div className="md:hidden divide-y divide-border/40">
+        <div data-role="responsive-table-cards" className="md:hidden p-3 space-y-2.5 bg-muted/15">
           {projectsLoading ? (
             Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="p-4 space-y-3">
+              <div key={i} className="rounded-xl border border-border/60 bg-card p-4 space-y-3 shadow-xs">
                 <Skeleton className="h-5 w-3/4" />
                 <Skeleton className="h-4 w-1/2" />
                 <Skeleton className="h-3 w-full" />
               </div>
             ))
           ) : projects.length === 0 ? (
-            <div className="px-4 py-10 text-center text-sm text-muted-foreground">
+            <div className="rounded-xl border border-border/60 bg-card px-4 py-10 text-center text-sm text-muted-foreground">
               No projects found in system
             </div>
           ) : (
             projects.map((project) => (
-              <div key={project.id} className="p-4 space-y-3">
+              <div
+                key={project.id}
+                className="rounded-xl border border-border/60 bg-card p-4 space-y-3 shadow-xs transition-colors hover:border-border"
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="font-bold text-foreground text-sm">{project.name}</div>

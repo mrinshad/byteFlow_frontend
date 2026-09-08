@@ -131,6 +131,7 @@ export function CardItem({ card, isDone }: CardItemProps) {
       style={style}
       {...attributes}
       {...listeners}
+      data-role="card-item"
       onClick={() => openCardDrawer(card.id)}
       className={`group relative flex flex-col gap-2 rounded-lg border p-3 shadow-xs transition-all duration-150 cursor-pointer select-none touch-pan-y ${
         isDeleted

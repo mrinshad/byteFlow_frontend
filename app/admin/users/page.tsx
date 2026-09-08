@@ -300,16 +300,16 @@ export default function AdminUsersPage() {
         </div>
 
         {/* Mobile Cards */}
-        <div className="md:hidden divide-y divide-border/40">
+        <div data-role="responsive-table-cards" className="md:hidden p-3 space-y-2.5 bg-muted/15">
           {isLoading ? (
             Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="p-4 space-y-3">
+              <div key={i} className="rounded-xl border border-border/60 bg-card p-4 space-y-3 shadow-xs">
                 <Skeleton className="h-6 w-3/4" />
                 <Skeleton className="h-4 w-1/2" />
               </div>
             ))
           ) : filteredUsers.length === 0 ? (
-            <div className="px-4 py-12 text-center text-sm text-muted-foreground">No users found</div>
+            <div className="rounded-xl border border-border/60 bg-card px-4 py-12 text-center text-sm text-muted-foreground">No users found</div>
           ) : (
             filteredUsers.map((user) => {
               const isSelf = user.id === currentUser?.id;
@@ -318,8 +318,8 @@ export default function AdminUsersPage() {
               return (
                 <div
                   key={user.id}
-                  className={`p-4 space-y-3 ${
-                    user.isDeleted ? 'opacity-75' : ''
+                  className={`rounded-xl border border-border/60 bg-card p-4 space-y-3 shadow-xs transition-colors hover:border-border ${
+                    user.isDeleted ? 'opacity-75 bg-destructive/[0.02]' : user.isLocked ? 'bg-amber-500/[0.02]' : ''
                   }`}
                 >
                   {/* User Info + Badges */}

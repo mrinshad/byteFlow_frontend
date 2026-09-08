@@ -4,15 +4,16 @@ import React from 'react';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import Image from 'next/image';
-import { Moon, Sun, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth-context';
 import { AccountMenu } from '@/components/account-menu';
 import { NotificationsPopover } from '@/components/notifications-popover';
+import { PortalSwitchButton } from '@/components/portal-switch-button';
 
 export function Navbar() {
   const { theme, setTheme } = useTheme();
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/80 backdrop-blur-md">
@@ -32,21 +33,7 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-2">
-          {isAuthenticated && (user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') && (
-            <Link href="/admin" className="hidden sm:inline-flex">
-              <Button
-                size="sm"
-                variant="outline"
-                title="Admin Portal"
-                aria-label="Admin Portal"
-                className="gap-1.5 text-xs font-semibold border-primary/40 bg-primary/5 text-primary hover:bg-primary hover:text-primary-foreground transition-all shadow-2xs"
-              >
-                <ShieldCheck className="h-3.5 w-3.5" />
-                <span>Admin Portal</span>
-                <ArrowRight className="h-3 w-3 ml-0.5" />
-              </Button>
-            </Link>
-          )}
+          <PortalSwitchButton />
 
           {isAuthenticated && <NotificationsPopover />}
 

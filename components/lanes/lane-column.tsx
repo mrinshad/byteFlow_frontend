@@ -153,9 +153,10 @@ export function LaneColumn({ lane, cards, projectId }: LaneColumnProps) {
     <>
       <div
         ref={setNodeRef}
+        data-role="lane-column"
         style={{
           ...style,
-          borderTopWidth: '3px',
+          borderTopWidth: '2px',
           borderTopColor: laneColor,
         }}
         className={`flex w-80 shrink-0 max-h-[calc(100vh-140px)] flex-col rounded-xl border border-border/60 bg-muted/30 p-3 shadow-xs transition-colors duration-150 ${
@@ -273,6 +274,11 @@ export function LaneColumn({ lane, cards, projectId }: LaneColumnProps) {
           </DropdownMenu>
         </div>
 
+        {/* Inline Card Creation at Top */}
+        <div className="pb-1.5">
+          <CreateCardInline projectId={projectId} laneId={lane.id} />
+        </div>
+
         {/* Cards Sortable Area */}
         <div
           className="flex flex-1 flex-col gap-2 overflow-y-auto rounded-lg bg-background/40 p-1.5 min-h-[100px] touch-pan-y"
@@ -292,11 +298,6 @@ export function LaneColumn({ lane, cards, projectId }: LaneColumnProps) {
               No cards in this lane
             </div>
           )}
-        </div>
-
-        {/* Inline Card Creation */}
-        <div className="pt-2">
-          <CreateCardInline projectId={projectId} laneId={lane.id} />
         </div>
       </div>
 

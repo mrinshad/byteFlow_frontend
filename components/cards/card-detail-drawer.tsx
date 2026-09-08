@@ -437,6 +437,8 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
               variant="ghost"
               size="icon-xs"
               onClick={handleCloseDrawer}
+              aria-label="Close drawer"
+              data-role="close-card-drawer"
               className="text-muted-foreground hover:text-foreground"
             >
               <X className="h-4 w-4" />

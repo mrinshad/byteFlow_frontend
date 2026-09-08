@@ -262,9 +262,12 @@ export default function AdminRolesPage() {
         </div>
 
         {/* Mobile Cards */}
-        <div className="md:hidden divide-y divide-border/40">
+        <div data-role="responsive-table-cards" className="md:hidden p-3 space-y-2.5 bg-muted/15">
           {permissions.map((perm, i) => (
-            <div key={i} className="p-4 space-y-2.5">
+            <div
+              key={i}
+              className="rounded-xl border border-border/60 bg-card p-4 space-y-2.5 shadow-xs transition-colors hover:border-border"
+            >
               <div>
                 <div className="font-bold text-foreground text-xs">{perm.name}</div>
                 <p className="text-[11px] text-muted-foreground mt-0.5">{perm.description}</p>

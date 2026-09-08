@@ -233,7 +233,7 @@ export function LaneContainer({ projectId }: LaneContainerProps) {
         .sort((a, b) => a.position - b.position);
 
       const oldIndex = laneCards.findIndex((c) => c.id === activeCardId);
-      let newIndex = laneCards.findIndex((c) => c.id === overId);
+      const newIndex = laneCards.findIndex((c) => c.id === overId);
 
       let reorderedLaneCards = [...laneCards];
       if (oldIndex !== -1 && newIndex !== -1) {
@@ -299,15 +299,22 @@ export function LaneContainer({ projectId }: LaneContainerProps) {
 
   if (lanesLoading || cardsLoading) {
     return (
-      <div className="relative flex items-start gap-4 overflow-x-auto pb-6 px-4 sm:px-6 min-w-0 w-full overscroll-x-contain">
+      <div
+        data-role="lanes-container"
+        className="relative flex-1 flex items-start gap-4 overflow-x-auto pb-6 px-4 sm:px-6 min-w-0 w-full overscroll-x-contain"
+      >
         {[...Array(3)].map((_, i) => (
           <div
             key={i}
-            className="w-80 shrink-0 rounded-xl border border-border/50 bg-muted/20 p-3 space-y-3"
+            className="w-80 shrink-0 max-h-[calc(100dvh-230px)] sm:max-h-[calc(100vh-140px)] rounded-xl border border-border/60 bg-muted/30 p-3 space-y-3"
           >
-            <Skeleton className="h-6 w-32 rounded-md" />
-            <Skeleton className="h-20 w-full rounded-lg" />
-            <Skeleton className="h-20 w-full rounded-lg" />
+            <div className="flex items-center justify-between pb-1">
+              <Skeleton className="h-6 w-32 rounded-md" />
+              <Skeleton className="h-5 w-6 rounded-full" />
+            </div>
+            <Skeleton className="h-24 w-full rounded-lg" />
+            <Skeleton className="h-24 w-full rounded-lg" />
+            <Skeleton className="h-24 w-full rounded-lg" />
           </div>
         ))}
       </div>
@@ -315,7 +322,10 @@ export function LaneContainer({ projectId }: LaneContainerProps) {
   }
 
   return (
-    <div className="relative flex-1 flex items-start gap-4 overflow-x-auto pb-6 px-4 sm:px-6 select-none min-w-0 w-full overscroll-x-contain">
+    <div
+      data-role="lanes-container"
+      className="relative flex-1 flex items-start gap-4 overflow-x-auto pb-6 px-4 sm:px-6 select-none min-w-0 w-full overscroll-x-contain"
+    >
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}

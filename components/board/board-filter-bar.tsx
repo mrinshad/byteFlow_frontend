@@ -113,6 +113,7 @@ export function BoardFilterBar({ projectId }: BoardFilterBarProps) {
         {/* Priority Filter */}
         <select
           value={priority}
+          aria-label="Filter cards by priority"
           onChange={(e) => setPriority(e.target.value as any)}
           className="h-8 rounded-lg border border-border bg-background px-2.5 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
         >
@@ -126,6 +127,7 @@ export function BoardFilterBar({ projectId }: BoardFilterBarProps) {
         {/* Tag Filter */}
         <select
           value={tagId}
+          aria-label="Filter cards by tag"
           onChange={(e) => setTagId(e.target.value)}
           className="h-8 rounded-lg border border-border bg-background px-2.5 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
         >
@@ -140,6 +142,7 @@ export function BoardFilterBar({ projectId }: BoardFilterBarProps) {
         {/* Assignee Filter */}
         <select
           value={assigneeId}
+          aria-label="Filter cards by assignee"
           onChange={(e) => setAssigneeId(e.target.value)}
           className="h-8 rounded-lg border border-border bg-background px-2.5 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
         >
@@ -154,6 +157,7 @@ export function BoardFilterBar({ projectId }: BoardFilterBarProps) {
         {/* Due Date Filter */}
         <select
           value={dueDateFilter}
+          aria-label="Filter cards by due date"
           onChange={(e) => setDueDateFilter(e.target.value as DueDateFilterOption)}
           className="h-8 rounded-lg border border-border bg-background px-2.5 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
         >

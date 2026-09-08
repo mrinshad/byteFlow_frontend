@@ -73,7 +73,7 @@ export function AccountMenu() {
                 <DropdownMenuItem
                   render={<Link href="/projects" className="gap-2.5 cursor-pointer text-xs font-medium" />}
                 >
-                  <LayoutGrid className="h-3.5 w-3.5 text-muted-foreground" />
+                  <LayoutGrid className="h-3.5 w-3.5 text-primary" />
                   <span>Kanban Boards</span>
                 </DropdownMenuItem>
               ) : (

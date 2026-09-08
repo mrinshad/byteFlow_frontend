@@ -25,6 +25,7 @@ import { useAuth } from '@/lib/auth-context';
 import { AuthGuard } from '@/components/auth-guard';
 import { AccountMenu } from '@/components/account-menu';
 import { NotificationsPopover } from '@/components/notifications-popover';
+import { PortalSwitchButton } from '@/components/portal-switch-button';
 import { Button } from '@/components/ui/button';
 
 export default function AdminLayout({
@@ -284,17 +285,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Switch to User Portal (Quick Action) */}
-            <Link href="/projects">
-              <Button
-                size="sm"
-                variant="outline"
-                className="gap-1.5 text-xs font-semibold border-border/60 hover:bg-muted"
-              >
-                <LayoutGrid className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="hidden sm:inline">Kanban Boards</span>
-              </Button>
-            </Link>
+            <PortalSwitchButton />
 
             {/* Notifications Popover */}
             <NotificationsPopover />

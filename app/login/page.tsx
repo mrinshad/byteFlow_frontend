@@ -74,7 +74,7 @@ export default function LoginPage() {
         </div>
       </header>
 
-      <div className="flex flex-1 items-center justify-center px-4">
+      <main className="flex flex-1 items-center justify-center px-4">
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="flex flex-col items-center gap-3 pb-8">
@@ -124,7 +124,8 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                 tabIndex={-1}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -144,7 +145,7 @@ export default function LoginPage() {
           </Link>
         </p>
       </div>
-      </div>
+      </main>
     </div>
   );
 }
