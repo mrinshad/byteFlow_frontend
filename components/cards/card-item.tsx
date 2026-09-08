@@ -202,6 +202,13 @@ export function CardItem({ card, isDone }: CardItemProps) {
             : 'text-foreground group-hover:text-primary'
         }`}
       >
+        {card.number && (
+          <>
+            <span className="font-mono text-[11px] font-semibold text-muted-foreground/75 mr-1.5 select-none">
+              #{card.number}
+            </span>{' '}
+          </>
+        )}
         {card.title}
       </h4>
 

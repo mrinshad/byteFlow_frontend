@@ -426,6 +426,11 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
         {/* Drawer Header */}
         <div className="flex items-center justify-between border-b border-border/50 px-5 py-3.5">
           <div className="flex items-center gap-2">
+            {card?.number && (
+              <span className="flex items-center rounded-md bg-muted/80 px-2 py-1 text-xs font-mono font-bold text-muted-foreground">
+                #{card.number}
+              </span>
+            )}
             <span className="flex items-center gap-1.5 rounded-md bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
               <Layers className="h-3.5 w-3.5" />
               <span>{card?.lane?.name || 'Lane'}</span>

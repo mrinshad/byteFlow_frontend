@@ -100,6 +100,7 @@ export interface Card {
   id: string;
   projectId: string;
   laneId: string;
+  number: number;
   title: string;
   description: string | null;
   priority: Priority;
