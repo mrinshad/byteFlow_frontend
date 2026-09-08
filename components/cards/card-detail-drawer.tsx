@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   X,
@@ -68,6 +68,11 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
   const [newTagColor, setNewTagColor] = useState(TAG_COLOR_PRESETS[0]);
   const [isCreatingTag, setIsCreatingTag] = useState(false);
 
+  // Local state & refs for instantaneous tag selection & debounced backend sync
+  const [localTagIds, setLocalTagIds] = useState<string[] | null>(null);
+  const pendingTogglesRef = useRef<Map<string, boolean>>(new Map());
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   // Fetch card details
   const { data, isLoading } = useQuery({
     queryKey: ['card', selectedCardId],
@@ -100,7 +105,35 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
   const lanes = lanesData?.data || [];
   const projectTags = tagsData?.data || [];
   const projectMembers = projectData?.data?.members || [];
-  const assignedTags = card?.tags?.map((t) => t.tag) || [];
+
+  const serverTagIds = useMemo(
+    () => (card?.tags || []).map((t) => t.tag?.id || t.tagId).filter(Boolean) as string[],
+    [card?.tags]
+  );
+
+  const currentAssignedIds = localTagIds ?? serverTagIds;
+  const isTagAssigned = useCallback(
+    (tagId: string) => currentAssignedIds.includes(tagId),
+    [currentAssignedIds]
+  );
+
+  const assignedTags = useMemo(() => {
+    const tagMap = new Map<string, Tag>();
+    projectTags.forEach((t) => tagMap.set(t.id, t));
+    (card?.tags || []).forEach((ct) => {
+      if (ct.tag) tagMap.set(ct.tag.id, ct.tag);
+    });
+    return currentAssignedIds
+      .map((id) => tagMap.get(id))
+      .filter((t): t is Tag => !!t);
+  }, [currentAssignedIds, projectTags, card?.tags]);
+
+  // Reset local state when server data updates if no pending toggles
+  useEffect(() => {
+    if (pendingTogglesRef.current.size === 0) {
+      setLocalTagIds(null);
+    }
+  }, [card?.tags]);
 
   useEffect(() => {
     if (card) {
@@ -164,48 +197,91 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
     },
   });
 
-  // Assign Tag Mutation
-  const assignTagMutation = useMutation({
-    mutationFn: (tagId: string) => {
-      if (!selectedCardId) throw new Error('No card selected');
-      return api.tags.assignToCard(selectedCardId, tagId);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['card', selectedCardId] });
-      queryClient.invalidateQueries({ queryKey: ['cards', projectId] });
-      queryClient.invalidateQueries({ queryKey: ['tags', projectId] });
-      queryClient.invalidateQueries({ queryKey: ['activities', 'card', selectedCardId] });
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to assign tag');
-    },
-  });
+  // Flush pending tag operations to server
+  const flushPendingTagToggles = useCallback(async () => {
+    if (pendingTogglesRef.current.size === 0 || !selectedCardId) return;
 
-  // Remove Tag Mutation
-  const removeTagMutation = useMutation({
-    mutationFn: (tagId: string) => {
-      if (!selectedCardId) throw new Error('No card selected');
-      return api.tags.removeFromCard(selectedCardId, tagId);
-    },
-    onSuccess: () => {
+    const entries = Array.from(pendingTogglesRef.current.entries());
+    pendingTogglesRef.current.clear();
+
+    try {
+      await Promise.all(
+        entries.map(([tagId, shouldAssign]) =>
+          shouldAssign
+            ? api.tags.assignToCard(selectedCardId, tagId)
+            : api.tags.removeFromCard(selectedCardId, tagId)
+        )
+      );
+
       queryClient.invalidateQueries({ queryKey: ['card', selectedCardId] });
       queryClient.invalidateQueries({ queryKey: ['cards', projectId] });
       queryClient.invalidateQueries({ queryKey: ['tags', projectId] });
       queryClient.invalidateQueries({ queryKey: ['activities', 'card', selectedCardId] });
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to update tags');
+      setLocalTagIds(null);
+    }
+  }, [selectedCardId, projectId, queryClient]);
+
+  // Clean up debounce timer and flush on unmount or card switch
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        flushPendingTagToggles();
+      }
+    };
+  }, [selectedCardId, flushPendingTagToggles]);
+
+  // Instant tag toggle handler with 350ms debounce
+  const toggleTag = useCallback(
+    (tagId: string) => {
+      if (!selectedCardId) return;
+
+      const isAssigned = currentAssignedIds.includes(tagId);
+      const nextAssigned = isAssigned
+        ? currentAssignedIds.filter((id) => id !== tagId)
+        : [...currentAssignedIds, tagId];
+
+      // 1. Instantly update UI (zero latency)
+      setLocalTagIds(nextAssigned);
+
+      // 2. Track pending mutation vs server baseline
+      const isAssignedOnServer = serverTagIds.includes(tagId);
+      const willBeAssigned = !isAssigned;
+
+      if (willBeAssigned === isAssignedOnServer) {
+        pendingTogglesRef.current.delete(tagId);
+      } else {
+        pendingTogglesRef.current.set(tagId, willBeAssigned);
+      }
+
+      // 3. Debounce network sync
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+
+      debounceTimerRef.current = setTimeout(() => {
+        flushPendingTagToggles();
+      }, 350);
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to remove tag');
-    },
-  });
+    [selectedCardId, currentAssignedIds, serverTagIds, flushPendingTagToggles]
+  );
 
   // Create Tag Mutation
   const createTagMutation = useMutation({
     mutationFn: (data: { name: string; color: string }) =>
       api.tags.create({ projectId, name: data.name, color: data.color }),
-    onSuccess: (res) => {
+    onSuccess: async (res) => {
       queryClient.invalidateQueries({ queryKey: ['tags', projectId] });
       if (res.data?.id && selectedCardId) {
-        assignTagMutation.mutate(res.data.id);
+        try {
+          await api.tags.assignToCard(selectedCardId, res.data.id);
+          queryClient.invalidateQueries({ queryKey: ['card', selectedCardId] });
+          queryClient.invalidateQueries({ queryKey: ['cards', projectId] });
+        } catch (e: any) {
+          toast.error(e?.message || 'Failed to assign new tag');
+        }
       }
       setNewTagName('');
       setIsCreatingTag(false);
@@ -261,6 +337,10 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
 
 
   const handleCloseDrawer = () => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      flushPendingTagToggles();
+    }
     const url = new URL(window.location.href);
     if (url.searchParams.has('cardId')) {
       url.searchParams.delete('cardId');
@@ -301,7 +381,7 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
 
     if (existing) {
       if (!isTagAssigned(existing.id)) {
-        assignTagMutation.mutate(existing.id);
+        toggleTag(existing.id);
         toast.success(`Tag "${existing.name}" assigned`);
       } else {
         toast.info(`Tag "${existing.name}" is already assigned`);
@@ -312,17 +392,6 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
     }
 
     createTagMutation.mutate({ name: trimmed, color: newTagColor });
-  };
-
-  const isTagAssigned = (tagId: string) =>
-    assignedTags.some((t) => t.id === tagId);
-
-  const toggleTag = (tag: Tag) => {
-    if (isTagAssigned(tag.id)) {
-      removeTagMutation.mutate(tag.id);
-    } else {
-      assignTagMutation.mutate(tag.id);
-    }
   };
 
   return (
@@ -464,7 +533,7 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
                                 <button
                                   key={tag.id}
                                   type="button"
-                                  onClick={() => toggleTag(tag)}
+                                  onClick={() => toggleTag(tag.id)}
                                   className="flex w-full items-center justify-between rounded-md px-2 py-1 text-left text-xs transition-colors hover:bg-muted/50 cursor-pointer"
                                 >
                                   <TagBadge tag={tag} size="xs" />
@@ -550,7 +619,7 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
                       key={tag.id}
                       tag={tag}
                       size="sm"
-                      onRemove={() => removeTagMutation.mutate(tag.id)}
+                      onRemove={() => toggleTag(tag.id)}
                     />
                   ))
                 )}

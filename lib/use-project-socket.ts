@@ -59,6 +59,8 @@ export function useProjectSocket(projectId: string | undefined) {
       queryClient.invalidateQueries({ queryKey: ['lanes', projectId] });
       queryClient.invalidateQueries({ queryKey: ['project-stats', projectId] });
       queryClient.invalidateQueries({ queryKey: ['activities', 'project', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'] });
       if (payload?.id) {
         queryClient.invalidateQueries({ queryKey: ['card', payload.id] });
         queryClient.invalidateQueries({ queryKey: ['activities', 'card', payload.id] });
@@ -68,6 +70,8 @@ export function useProjectSocket(projectId: string | undefined) {
     // Comment events
     const onCommentChange = (payload?: any) => {
       queryClient.invalidateQueries({ queryKey: ['cards', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'] });
       if (payload?.cardId) {
         queryClient.invalidateQueries({ queryKey: ['comments', payload.cardId] });
         queryClient.invalidateQueries({ queryKey: ['card', payload.cardId] });
