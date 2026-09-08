@@ -149,16 +149,6 @@ export function LaneColumn({ lane, cards, projectId }: LaneColumnProps) {
   const laneColor = lane.color || '#64748b';
   const isDone = isDoneLane(lane.name);
 
-  // Convert hex to RGB for transparent background tinting
-  const hexToRgb = (hex: string) => {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result
-      ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) }
-      : { r: 100, g: 116, b: 139 };
-  };
-
-  const rgb = hexToRgb(laneColor);
-
   return (
     <>
       <div
