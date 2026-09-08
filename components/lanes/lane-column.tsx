@@ -149,12 +149,28 @@ export function LaneColumn({ lane, cards, projectId }: LaneColumnProps) {
   const laneColor = lane.color || '#64748b';
   const isDone = isDoneLane(lane.name);
 
+  // Convert hex to RGB for transparent background tinting
+  const hexToRgb = (hex: string) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result
+      ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) }
+      : { r: 100, g: 116, b: 139 };
+  };
+
+  const rgb = hexToRgb(laneColor);
+
   return (
     <>
       <div
         ref={setNodeRef}
-        style={style}
-        className={`flex w-80 shrink-0 max-h-[calc(100vh-140px)] flex-col rounded-xl border border-border/60 bg-muted/30 p-3 shadow-xs transition-colors duration-150 ${
+        style={{
+          ...style,
+          backgroundColor: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.06)`,
+          borderColor: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15)`,
+          borderTopWidth: '3px',
+          borderTopColor: laneColor,
+        }}
+        className={`flex w-80 shrink-0 max-h-[calc(100vh-140px)] flex-col rounded-xl border p-3 shadow-xs transition-colors duration-150 ${
           isDragging ? 'opacity-40 ring-2 ring-primary/40' : ''
         }`}
       >
@@ -270,7 +286,10 @@ export function LaneColumn({ lane, cards, projectId }: LaneColumnProps) {
         </div>
 
         {/* Cards Sortable Area */}
-        <div className="flex flex-1 flex-col gap-2 overflow-y-auto rounded-lg bg-background/40 p-1.5 min-h-[100px]">
+        <div
+          className="flex flex-1 flex-col gap-2 overflow-y-auto rounded-lg p-1.5 min-h-[100px]"
+          style={{ backgroundColor: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.03)` }}
+        >
           <SortableContext
             items={cards.map((c) => c.id)}
             strategy={verticalListSortingStrategy}

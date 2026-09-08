@@ -27,13 +27,13 @@ export function Navbar() {
               className="h-8 w-8 rounded-lg object-contain shadow-2xs"
               priority
             />
-            <span className="text-base font-semibold">ByteFlow</span>
+            <span className="text-base font-semibold hidden sm:inline">ByteFlow</span>
           </Link>
         </div>
 
         <div className="flex items-center gap-2">
           {isAuthenticated && (user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') && (
-            <Link href="/admin">
+            <Link href="/admin" className="hidden sm:inline-flex">
               <Button
                 size="sm"
                 variant="outline"
@@ -42,8 +42,8 @@ export function Navbar() {
                 className="gap-1.5 text-xs font-semibold border-primary/40 bg-primary/5 text-primary hover:bg-primary hover:text-primary-foreground transition-all shadow-2xs"
               >
                 <ShieldCheck className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Admin Portal</span>
-                <ArrowRight className="hidden sm:inline h-3 w-3 ml-0.5" />
+                <span>Admin Portal</span>
+                <ArrowRight className="h-3 w-3 ml-0.5" />
               </Button>
             </Link>
           )}
