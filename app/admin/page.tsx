@@ -215,7 +215,7 @@ export default function AdminDashboardPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Link href={`/projects/${project.id}`}>
+                        <Link href={`/projects/${project.slug || project.id}`}>
                           <Button size="xs" variant="outline" className="h-7 text-xs gap-1">
                             <span>Open Board</span>
                             <ExternalLink className="h-3 w-3" />
@@ -257,7 +257,7 @@ export default function AdminDashboardPage() {
                       <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">{project.description}</p>
                     )}
                   </div>
-                  <Link href={`/projects/${project.id}`} className="shrink-0">
+                  <Link href={`/projects/${project.slug || project.id}`} className="shrink-0">
                     <Button size="xs" variant="outline" className="h-7 text-xs gap-1">
                       <span>Open</span>
                       <ExternalLink className="h-3 w-3" />

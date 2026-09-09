@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Search, X, Filter, RotateCcw } from 'lucide-react';
 import { api, type Priority, type Tag, type ProjectMember } from '@/lib/api';
 import { useBoardStore, type DueDateFilterOption } from '@/lib/store/use-board-store';
+import { useDebounce } from '@/lib/hooks/use-debounce';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
@@ -21,7 +22,7 @@ const PRIORITIES: { label: string; value: Priority | 'ALL' }[] = [
 ];
 
 const DUE_DATE_OPTIONS: { label: string; value: DueDateFilterOption }[] = [
-  { label: 'All Dates', value: 'all' },
+  { label: 'All Due Dates', value: 'all' },
   { label: 'Overdue', value: 'overdue' },
   { label: 'Due Today', value: 'today' },
   { label: 'Due This Week', value: 'this_week' },
@@ -42,6 +43,26 @@ export function BoardFilterBar({ projectId }: BoardFilterBarProps) {
     setDueDateFilter,
     resetFilters,
   } = useBoardStore();
+
+  const [inputValue, setInputValue] = useState(search);
+  const debouncedSearch = useDebounce(inputValue, 300);
+
+  // Sync debounced search to store filter
+  useEffect(() => {
+    if (debouncedSearch !== search) {
+      setSearch(debouncedSearch);
+    }
+  }, [debouncedSearch, setSearch, search]);
+
+  // Sync external changes to store search (e.g. resetFilters) to local input
+  useEffect(() => {
+    setInputValue(search);
+  }, [search]);
+
+  const handleClearSearch = () => {
+    setInputValue('');
+    setSearch('');
+  };
 
   // Fetch project tags for dropdown
   const { data: tagsData } = useQuery({
@@ -95,15 +116,16 @@ export function BoardFilterBar({ projectId }: BoardFilterBarProps) {
           <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
           <Input
             placeholder="Search cards..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
             className="h-8 pl-8 pr-7 text-xs"
           />
-          {search && (
+          {inputValue && (
             <button
               type="button"
-              onClick={() => setSearch('')}
-              className="absolute right-2 top-2.5 text-muted-foreground hover:text-foreground"
+              onClick={handleClearSearch}
+              aria-label="Clear search"
+              className="absolute right-2 top-2.5 text-muted-foreground hover:text-foreground cursor-pointer"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -195,8 +217,8 @@ export function BoardFilterBar({ projectId }: BoardFilterBarProps) {
               <span>Keyword: &quot;{search}&quot;</span>
               <button
                 type="button"
-                onClick={() => setSearch('')}
-                className="hover:text-destructive"
+                onClick={handleClearSearch}
+                className="hover:text-destructive cursor-pointer"
               >
                 <X className="h-2.5 w-2.5" />
               </button>

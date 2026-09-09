@@ -36,7 +36,7 @@ export function ProjectCard({ project, onEdit, onDelete, currentUser }: ProjectC
       <div>
         <div className="flex items-start justify-between gap-2">
           <Link
-            href={`/projects/${project.id}`}
+            href={`/projects/${project.slug || project.id}`}
             className="flex-1 font-semibold text-foreground tracking-tight transition-colors group-hover:text-primary"
           >
             <h3 className="line-clamp-1 text-base font-semibold">{project.name}</h3>
@@ -95,7 +95,7 @@ export function ProjectCard({ project, onEdit, onDelete, currentUser }: ProjectC
         </div>
 
         <Link
-          href={`/projects/${project.id}`}
+          href={`/projects/${project.slug || project.id}`}
           className="flex items-center gap-1 font-medium text-foreground transition-colors hover:text-primary"
         >
           <span>Open</span>

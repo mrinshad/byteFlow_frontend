@@ -75,6 +75,7 @@ export function LaneContainer({ projectId }: LaneContainerProps) {
   const { data: cardsData, isLoading: cardsLoading } = useQuery({
     queryKey: ['cards', projectId, activeFilters],
     queryFn: () => api.cards.listByProject(projectId, activeFilters),
+    placeholderData: (previousData) => previousData,
   });
 
   const lanes = lanesData?.data || [];

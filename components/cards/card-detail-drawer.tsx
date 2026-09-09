@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api, type Card, type Priority, type Lane, type Tag } from '@/lib/api';
+import { useDebounce } from '@/lib/hooks/use-debounce';
 import { useBoardStore } from '@/lib/store/use-board-store';
 import { CommentSection } from '@/components/cards/comment-section';
 import { TagBadge } from '@/components/tags/tag-badge';
@@ -64,6 +65,7 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
   // Tag Popover State
   const [tagPickerOpen, setTagPickerOpen] = useState(false);
   const [tagSearch, setTagSearch] = useState('');
+  const debouncedTagSearch = useDebounce(tagSearch, 200);
   const [newTagName, setNewTagName] = useState('');
   const [newTagColor, setNewTagColor] = useState(TAG_COLOR_PRESETS[0]);
   const [isCreatingTag, setIsCreatingTag] = useState(false);
@@ -364,8 +366,9 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
   };
 
   const handleShareCard = async () => {
-    if (!selectedCardId) return;
-    const url = `${window.location.origin}/projects/${projectId}?cardId=${selectedCardId}`;
+    const projectSlug = useBoardStore.getState().currentProject?.slug;
+    const projectIdentifier = projectSlug || projectId;
+    const url = `${window.location.origin}/projects/${projectIdentifier}?cardId=${selectedCardId}`;
     try {
       if (navigator.clipboard) {
         await navigator.clipboard.writeText(url);
@@ -427,7 +430,7 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
         <div className="flex items-center justify-between border-b border-border/50 px-5 py-3.5">
           <div className="flex items-center gap-2">
             {card?.number && (
-              <span className="flex items-center rounded-md bg-muted/80 px-2 py-1 text-xs font-mono font-bold text-muted-foreground">
+              <span className="flex items-center rounded-md bg-muted/80 px-2 py-1 text-sm font-mono font-bold text-foreground/85">
                 #{card.number}
               </span>
             )}
@@ -526,13 +529,23 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
                       {/* Tag Search / Filter Input */}
                       {projectTags.length > 2 && (
                         <div className="pt-2 pb-1 relative">
-                          <Search className="absolute left-2 top-3.5 h-3 w-3 text-muted-foreground" />
+                          <Search className="absolute left-2 top-3.5 h-3 w-3 text-muted-foreground pointer-events-none" />
                           <Input
                             placeholder="Filter project tags..."
                             value={tagSearch}
                             onChange={(e) => setTagSearch(e.target.value)}
-                            className="h-6 text-[11px] pl-6 pr-2"
+                            className="h-6 text-[11px] pl-6 pr-5"
                           />
+                          {tagSearch && (
+                            <button
+                              type="button"
+                              onClick={() => setTagSearch('')}
+                              className="absolute right-1.5 top-3 text-muted-foreground hover:text-foreground transition-colors"
+                              aria-label="Clear tag search"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          )}
                         </div>
                       )}
 
@@ -544,12 +557,12 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
                           </div>
                         ) : (() => {
                             const filtered = projectTags.filter((t) =>
-                              t.name.toLowerCase().includes(tagSearch.trim().toLowerCase())
+                              t.name.toLowerCase().includes(debouncedTagSearch.trim().toLowerCase())
                             );
                             if (filtered.length === 0) {
                               return (
                                 <div className="text-[11px] text-muted-foreground/70 py-1 text-center">
-                                  No tags matching &quot;{tagSearch}&quot;
+                                  No tags matching &quot;{debouncedTagSearch}&quot;
                                 </div>
                               );
                             }

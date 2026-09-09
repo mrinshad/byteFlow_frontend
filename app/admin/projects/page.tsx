@@ -11,11 +11,13 @@ import {
   ExternalLink,
   Plus,
   Search,
+  X,
   RotateCcw,
   Eye,
   EyeOff,
 } from 'lucide-react';
 import { api, type AdminProject } from '@/lib/api';
+import { useDebounce } from '@/lib/hooks/use-debounce';
 import { AssignMembersDialog } from '@/components/admin/assign-members-dialog';
 import { CreateProjectDialog } from '@/components/projects/create-project-dialog';
 import { DeleteProjectDialog } from '@/components/projects/delete-project-dialog';
@@ -26,6 +28,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function AdminProjectsPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 250);
   const [showDeleted, setShowDeleted] = useState(false);
   const [assigningProject, setAssigningProject] = useState<AdminProject | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
@@ -54,8 +57,8 @@ export default function AdminProjectsPage() {
   const deletedProjects = allProjects.filter((p) => p.isDeleted);
 
   const displayedProjects = (showDeleted ? allProjects : activeProjects).filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    (p.description && p.description.toLowerCase().includes(search.toLowerCase()))
+    p.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+    (p.description && p.description.toLowerCase().includes(debouncedSearch.toLowerCase()))
   );
 
   return (
@@ -63,31 +66,32 @@ export default function AdminProjectsPage() {
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-6 border-b border-border/40">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Projects & User Assignments</h1>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Oversee all workspace projects, monitor task completion reports, and assign user access to projects.
+          <h1 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <FolderKanban className="h-5 w-5 text-primary" />
+            <span>Manage Projects</span>
+          </h1>
+          <p className="text-xs text-muted-foreground mt-1">
+            Create, configure, assign team members, or restore archived projects.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <Button
             variant="outline"
             size="sm"
             onClick={() => setShowDeleted(!showDeleted)}
-            className={`gap-1.5 text-xs font-semibold ${
-              showDeleted ? 'border-destructive/40 bg-destructive/10 text-destructive' : ''
-            }`}
+            className="gap-1.5 text-xs h-8"
           >
             {showDeleted ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
             <span>{showDeleted ? 'Hide Deleted' : `Show Deleted (${deletedProjects.length})`}</span>
           </Button>
 
           <Button
-            onClick={() => setCreateOpen(true)}
             size="sm"
-            className="gap-1.5 text-xs font-semibold shadow-xs"
+            onClick={() => setCreateOpen(true)}
+            className="gap-1.5 text-xs h-8 shadow-xs"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-3.5 w-3.5" />
             <span>New Project</span>
           </Button>
         </div>
@@ -101,8 +105,18 @@ export default function AdminProjectsPage() {
             placeholder="Search projects by name..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 h-9 text-xs"
+            className="pl-9 pr-8 h-9 text-xs"
           />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch('')}
+              aria-label="Clear search"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
         <span className="text-xs font-medium text-muted-foreground">
           Showing {displayedProjects.length} of {showDeleted ? allProjects.length : activeProjects.length} projects
@@ -250,7 +264,7 @@ export default function AdminProjectsPage() {
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
 
-                      <Link href={`/projects/${project.id}`}>
+                      <Link href={`/projects/${project.slug || project.id}`}>
                         <Button size="xs" variant="ghost" className="h-7 gap-1 text-xs font-semibold">
                           <span>Open Board</span>
                           <ExternalLink className="h-3 w-3" />

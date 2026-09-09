@@ -50,6 +50,7 @@ export function useProjectSocket(projectId: string | undefined) {
     const onLaneChange = () => {
       queryClient.invalidateQueries({ queryKey: ['lanes', projectId] });
       queryClient.invalidateQueries({ queryKey: ['project-stats', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['project-members-summary', projectId] });
       queryClient.invalidateQueries({ queryKey: ['activities', 'project', projectId] });
     };
 
@@ -58,6 +59,7 @@ export function useProjectSocket(projectId: string | undefined) {
       queryClient.invalidateQueries({ queryKey: ['cards', projectId] });
       queryClient.invalidateQueries({ queryKey: ['lanes', projectId] });
       queryClient.invalidateQueries({ queryKey: ['project-stats', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['project-members-summary', projectId] });
       queryClient.invalidateQueries({ queryKey: ['activities', 'project', projectId] });
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'] });
@@ -65,6 +67,13 @@ export function useProjectSocket(projectId: string | undefined) {
         queryClient.invalidateQueries({ queryKey: ['card', payload.id] });
         queryClient.invalidateQueries({ queryKey: ['activities', 'card', payload.id] });
       }
+    };
+
+    // Project metadata & members events
+    const onProjectChange = () => {
+      queryClient.invalidateQueries({ queryKey: ['project', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['project-members-summary', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['project-stats', projectId] });
     };
 
     // Comment events
@@ -91,6 +100,9 @@ export function useProjectSocket(projectId: string | undefined) {
       queryClient.invalidateQueries({ queryKey: ['activities', 'project', projectId] });
     };
 
+    socket.on('project:updated', onProjectChange);
+    socket.on('project:members:updated', onProjectChange);
+
     socket.on('lane:created', onLaneChange);
     socket.on('lane:updated', onLaneChange);
     socket.on('lane:reordered', onLaneChange);
@@ -116,6 +128,8 @@ export function useProjectSocket(projectId: string | undefined) {
       socket.emit('leave:project', projectId);
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
+      socket.off('project:updated', onProjectChange);
+      socket.off('project:members:updated', onProjectChange);
       socket.off('lane:created', onLaneChange);
       socket.off('lane:updated', onLaneChange);
       socket.off('lane:reordered', onLaneChange);
@@ -162,9 +176,28 @@ export function useUserNotificationsSocket(userId: string | undefined) {
       queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'] });
     };
 
+    const onProjectListChange = () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'projects'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'stats'] });
+    };
+
+    const onUserListChange = () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'stats'] });
+    };
+
     socket.on('notification:new', onNotificationChange);
     socket.on('notification:read', onNotificationChange);
     socket.on('notification:read:all', onNotificationChange);
+
+    socket.on('project:created', onProjectListChange);
+    socket.on('project:updated', onProjectListChange);
+    socket.on('project:deleted', onProjectListChange);
+
+    socket.on('user:created', onUserListChange);
+    socket.on('user:updated', onUserListChange);
+    socket.on('user:deleted', onUserListChange);
 
     return () => {
       socket.emit('leave:user', userId);
@@ -172,6 +205,12 @@ export function useUserNotificationsSocket(userId: string | undefined) {
       socket.off('notification:new', onNotificationChange);
       socket.off('notification:read', onNotificationChange);
       socket.off('notification:read:all', onNotificationChange);
+      socket.off('project:created', onProjectListChange);
+      socket.off('project:updated', onProjectListChange);
+      socket.off('project:deleted', onProjectListChange);
+      socket.off('user:created', onUserListChange);
+      socket.off('user:updated', onUserListChange);
+      socket.off('user:deleted', onUserListChange);
     };
   }, [userId, queryClient]);
 }

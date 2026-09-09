@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import {
   Plus,
   Search,
+  X,
   KeyRound,
   Lock,
   Unlock,
@@ -17,6 +18,7 @@ import {
 } from 'lucide-react';
 import { api, type Role, type AdminUser } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
+import { useDebounce } from '@/lib/hooks/use-debounce';
 import { AdminResetPasswordDialog } from '@/components/admin/admin-reset-password-dialog';
 import { AdminCreateUserDialog } from '@/components/admin/admin-create-user-dialog';
 import { Button } from '@/components/ui/button';
@@ -27,6 +29,7 @@ export default function AdminUsersPage() {
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 250);
   const [showDeactivated, setShowDeactivated] = useState(false);
   const [resetUser, setResetUser] = useState<AdminUser | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -42,10 +45,10 @@ export default function AdminUsersPage() {
   const activeUsers = allUsers.filter((u) => !u.isDeleted);
   const deactivatedUsers = allUsers.filter((u) => u.isDeleted);
 
-  const filteredUsers = (showDeactivated ? allUsers : activeUsers).filter((u) =>
-    u.name.toLowerCase().includes(search.toLowerCase()) ||
-    u.username.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredUsers = (showDeactivated ? allUsers : activeUsers).filter((u) => {
+    const q = debouncedSearch.toLowerCase().trim();
+    return !q || u.name.toLowerCase().includes(q) || u.username.toLowerCase().includes(q);
+  });
 
   const updateRoleMutation = useMutation({
     mutationFn: ({ userId, role }: { userId: string; role: Role }) =>
@@ -138,13 +141,23 @@ export default function AdminUsersPage() {
       {/* Filter and Search Bar */}
       <div className="flex items-center justify-between gap-4">
         <div className="relative w-full max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
           <Input
             placeholder="Search users..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 h-9 text-xs"
+            className="pl-9 pr-8 h-9 text-xs"
           />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Clear search"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
         <span className="text-xs font-medium text-muted-foreground">
           Showing {filteredUsers.length} of {showDeactivated ? allUsers.length : activeUsers.length} users
@@ -245,7 +258,7 @@ export default function AdminUsersPage() {
                         ) : (
                           <div className="flex flex-wrap gap-1 max-w-xs">
                             {user.assignedProjects.map((p) => (
-                              <Link key={p.id} href={`/projects/${p.id}`} className="inline-flex items-center rounded bg-muted/60 px-1.5 py-0.5 text-[11px] font-medium text-foreground hover:bg-muted transition-colors">
+                              <Link key={p.id} href={`/projects/${p.slug || p.id}`} className="inline-flex items-center rounded bg-muted/60 px-1.5 py-0.5 text-[11px] font-medium text-foreground hover:bg-muted transition-colors">
                                 {p.name}
                               </Link>
                             ))}
@@ -371,7 +384,7 @@ export default function AdminUsersPage() {
                     {user.assignedProjects.length > 0 && (
                       <div className="flex flex-wrap gap-1">
                         {user.assignedProjects.map((p) => (
-                          <Link key={p.id} href={`/projects/${p.id}`} className="inline-flex items-center rounded bg-muted/60 px-1.5 py-0.5 text-[11px] font-medium text-foreground hover:bg-muted transition-colors">
+                          <Link key={p.id} href={`/projects/${p.slug || p.id}`} className="inline-flex items-center rounded bg-muted/60 px-1.5 py-0.5 text-[11px] font-medium text-foreground hover:bg-muted transition-colors">
                             {p.name}
                           </Link>
                         ))}

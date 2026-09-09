@@ -103,11 +103,12 @@ export function NotificationsPopover() {
     setIsOpen(false);
 
     if (item.projectId) {
-      router.push(`/projects/${item.projectId}`);
+      const targetUrl = item.cardId
+        ? `/projects/${item.projectId}?cardId=${item.cardId}`
+        : `/projects/${item.projectId}`;
+      router.push(targetUrl);
       if (item.cardId) {
-        setTimeout(() => {
-          openCardDrawer(item.cardId!);
-        }, 150);
+        openCardDrawer(item.cardId);
       }
     }
   };

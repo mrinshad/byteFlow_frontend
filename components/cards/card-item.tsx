@@ -161,9 +161,9 @@ export function CardItem({ card, isDone }: CardItemProps) {
             variant="ghost"
             onClick={(e) => {
               e.stopPropagation();
-              const origin =
-                typeof window !== 'undefined' ? window.location.origin : '';
-              const shareUrl = `${origin}/projects/${card.projectId}?cardId=${card.id}`;
+              const projectSlug = useBoardStore.getState().currentProject?.slug;
+              const projectIdentifier = projectSlug || card.projectId;
+              const shareUrl = `${origin}/projects/${projectIdentifier}?cardId=${card.id}`;
               if (navigator.clipboard?.writeText) {
                 navigator.clipboard.writeText(shareUrl);
                 toast.success('Card link copied to clipboard!');
@@ -204,7 +204,7 @@ export function CardItem({ card, isDone }: CardItemProps) {
       >
         {card.number && (
           <>
-            <span className="font-mono text-[11px] font-semibold text-muted-foreground/75 mr-1.5 select-none">
+            <span className="font-mono text-[13px] font-semibold text-foreground/85 mr-1.5 select-none">
               #{card.number}
             </span>{' '}
           </>

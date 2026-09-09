@@ -61,6 +61,7 @@ export interface ProjectMemberSummary {
 
 export interface Project {
   id: string;
+  slug: string;
   name: string;
   description: string | null;
   createdBy: string | null;
@@ -182,6 +183,7 @@ export interface ActivityLog {
   } | null;
   project?: {
     id: string;
+    slug?: string;
     name: string;
   } | null;
 }
@@ -721,6 +723,7 @@ export interface AdminStats {
 
 export interface AdminProject {
   id: string;
+  slug?: string;
   name: string;
   description: string | null;
   createdBy: string | null;
@@ -759,6 +762,7 @@ export interface AdminUser {
   createdAt: string;
   assignedProjects: Array<{
     id: string;
+    slug?: string;
     name: string;
   }>;
 }

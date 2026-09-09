@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Search, Plus, FolderKanban, Layers, CheckCircle2 } from 'lucide-react';
+import { Search, X, Plus, FolderKanban, Layers, CheckCircle2 } from 'lucide-react';
 import { api, type Project } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { Navbar } from '@/components/navbar';
@@ -12,12 +12,14 @@ import { CreateProjectDialog } from '@/components/projects/create-project-dialog
 import { EditProjectDialog } from '@/components/projects/edit-project-dialog';
 import { DeleteProjectDialog } from '@/components/projects/delete-project-dialog';
 import { Input } from '@/components/ui/input';
+import { useDebounce } from '@/lib/hooks/use-debounce';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ProjectsPage() {
   const { user } = useAuth();
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 300);
   const [createOpen, setCreateOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [deletingProject, setDeletingProject] = useState<Project | null>(null);
@@ -25,8 +27,9 @@ export default function ProjectsPage() {
   const canCreate = Boolean(user?.role && user.role !== 'MEMBER');
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['projects', search, user?.id],
-    queryFn: () => api.projects.list({ search: search.trim() || undefined }),
+    queryKey: ['projects', debouncedSearch, user?.id],
+    queryFn: () => api.projects.list({ search: debouncedSearch.trim() || undefined }),
+    placeholderData: (previousData) => previousData,
   });
 
   const { data: globalStatsData } = useQuery({
@@ -106,8 +109,18 @@ export default function ProjectsPage() {
                 placeholder="Search projects by name or description..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-9"
+                className="pl-9 pr-9"
               />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch('')}
+                  aria-label="Clear search"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
             <span className="text-xs font-medium text-muted-foreground">
               {total} {total === 1 ? 'project' : 'projects'}
@@ -136,20 +149,20 @@ export default function ProjectsPage() {
                   <FolderKanban className="h-6 w-6" />
                 </div>
                 <h3 className="mt-4 text-base font-semibold text-foreground">
-                  {search
+                  {debouncedSearch
                     ? 'No matching projects found'
                     : canCreate
                     ? 'No projects yet'
                     : 'No Projects Assigned'}
                 </h3>
                 <p className="mt-1.5 max-w-md text-xs text-muted-foreground leading-relaxed">
-                  {search
-                    ? `No projects matched "${search}". Try adjusting your search query.`
+                  {debouncedSearch
+                    ? `No projects matched "${debouncedSearch}". Try adjusting your search query.`
                     : canCreate
                     ? 'Get started by creating your first project to organize lanes and track cards.'
                     : 'You currently have no projects assigned to you. Please ask an Administrator or your Project Manager to create a project or assign you to one.'}
                 </p>
-                {!search && canCreate && (
+                {!debouncedSearch && canCreate && (
                   <Button onClick={() => setCreateOpen(true)} className="mt-6 gap-2 shadow-xs">
                     <Plus className="h-4 w-4" />
                     <span>Create Project</span>

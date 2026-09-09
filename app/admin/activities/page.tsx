@@ -247,7 +247,7 @@ export default function AdminActivitiesPage() {
                     </td>
                     <td className="px-6 py-3.5 whitespace-nowrap">
                       {act.project ? (
-                        <Link href={`/projects/${act.project.id}`} className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline">
+                        <Link href={`/projects/${act.project.slug || act.project.id}`} className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline">
                           <FolderKanban className="h-3 w-3" />
                           <span>{act.project.name}</span>
                         </Link>
@@ -302,7 +302,7 @@ export default function AdminActivitiesPage() {
                 {/* Footer: Project + Timestamp */}
                 <div className="flex items-center justify-between gap-2 text-[11px]">
                   {act.project ? (
-                    <Link href={`/projects/${act.project.id}`} className="inline-flex items-center gap-1 font-semibold text-primary hover:underline">
+                    <Link href={`/projects/${act.project.slug || act.project.id}`} className="inline-flex items-center gap-1 font-semibold text-primary hover:underline">
                       <FolderKanban className="h-3 w-3" />
                       <span>{act.project.name}</span>
                     </Link>
