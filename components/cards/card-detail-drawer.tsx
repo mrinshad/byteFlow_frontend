@@ -483,7 +483,10 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
               <span>{card?.lane?.name || 'Lane'}</span>
             </span>
             {card?.deletedAt && (
-              <span className="rounded bg-rose-500/15 px-2 py-0.5 text-[10px] font-bold text-rose-500 border border-rose-500/30 uppercase tracking-wider">
+              <span
+                data-role="deleted-badge"
+                className="rounded bg-rose-500/15 px-2 py-0.5 text-[10px] font-bold text-rose-500 border border-rose-500/30 uppercase tracking-wider"
+              >
                 Deleted
               </span>
             )}
