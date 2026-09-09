@@ -37,8 +37,8 @@ export default function AdminUsersPage() {
   const isSuperAdmin = currentUser?.role === 'SUPER_ADMIN';
 
   const { data: usersData, isLoading } = useQuery({
-    queryKey: ['admin', 'users', { includeDeleted: true }],
-    queryFn: () => api.admin.getUsers({ includeDeleted: true }),
+    queryKey: ['admin', 'users', { includeDeleted: showDeactivated }],
+    queryFn: () => api.admin.getUsers({ includeDeleted: showDeactivated }),
   });
 
   const rawUsers = usersData?.data || [];

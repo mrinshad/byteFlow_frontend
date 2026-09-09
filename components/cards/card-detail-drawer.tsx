@@ -14,8 +14,12 @@ import {
   History,
   Search,
   Share2,
+  Route,
+  RotateCcw,
+  AlertCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/lib/auth-context';
 import { api, type Card, type Priority, type Lane, type Tag } from '@/lib/api';
 import { useDebounce } from '@/lib/hooks/use-debounce';
 import { useBoardStore } from '@/lib/store/use-board-store';
@@ -53,6 +57,8 @@ interface CardDetailDrawerProps {
 }
 
 export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
+  const { user } = useAuth();
+  const canManageCards = user?.role === 'ADMIN' || user?.role === 'MANAGER' || user?.role === 'SUPER_ADMIN';
   const { selectedCardId, isDrawerOpen, closeCardDrawer } = useBoardStore();
   const queryClient = useQueryClient();
 
@@ -62,6 +68,19 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
   const [dueDate, setDueDate] = useState('');
   const [assigneeId, setAssigneeId] = useState('');
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [shareDeletedModalOpen, setShareDeletedModalOpen] = useState(false);
+
+  const restoreMutation = useMutation({
+    mutationFn: () => (card ? api.cards.restore(card.id) : Promise.reject('No card')),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['card', selectedCardId] });
+      queryClient.invalidateQueries({ queryKey: ['cards', projectId] });
+      toast.success('Card restored successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to restore card');
+    },
+  });
 
   // Tag Popover State
   const [tagPickerOpen, setTagPickerOpen] = useState(false);
@@ -82,6 +101,21 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
     queryFn: () => (selectedCardId ? api.cards.getById(selectedCardId) : null),
     enabled: !!selectedCardId && isDrawerOpen,
   });
+
+  const notifiedDeletedCardRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (data?.data?.id && data?.data?.deletedAt && notifiedDeletedCardRef.current !== data.data.id) {
+      notifiedDeletedCardRef.current = data.data.id;
+      toast.warning('This card has been deleted');
+    }
+  }, [data?.data?.id, data?.data?.deletedAt]);
+
+  useEffect(() => {
+    if (!isDrawerOpen) {
+      notifiedDeletedCardRef.current = null;
+    }
+  }, [isDrawerOpen]);
 
   // Fetch lanes for moving lane selector
   const { data: lanesData } = useQuery({
@@ -370,6 +404,11 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
   };
 
   const handleShareCard = async () => {
+    if (!selectedCardId) return;
+    if (card?.deletedAt) {
+      setShareDeletedModalOpen(true);
+      return;
+    }
     const projectSlug = useBoardStore.getState().currentProject?.slug;
     const projectIdentifier = projectSlug || projectId;
     const url = `${window.location.origin}/projects/${projectIdentifier}?cardId=${selectedCardId}`;
@@ -443,28 +482,48 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
               <Layers className="h-3.5 w-3.5" />
               <span>{card?.lane?.name || 'Lane'}</span>
             </span>
+            {card?.deletedAt && (
+              <span className="rounded bg-rose-500/15 px-2 py-0.5 text-[10px] font-bold text-rose-500 border border-rose-500/30 uppercase tracking-wider">
+                Deleted
+              </span>
+            )}
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
+            {card?.deletedAt && (
+              <Button
+                variant="outline"
+                size="xs"
+                onClick={() => restoreMutation.mutate()}
+                disabled={restoreMutation.isPending}
+                className="h-7 px-2.5 gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10"
+                title="Restore deleted card"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                <span>Restore</span>
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon-xs"
               onClick={handleShareCard}
               className="text-muted-foreground hover:text-foreground cursor-pointer"
-              title="Share card link"
+              title={card?.deletedAt ? 'Cannot share deleted card' : 'Share card link'}
               aria-label="Share card link"
             >
               <Share2 className="h-4 w-4" />
             </Button>
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              onClick={() => setDeleteOpen(true)}
-              className="text-muted-foreground hover:text-destructive"
-              title="Delete card"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            {!card?.deletedAt && (
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => setDeleteOpen(true)}
+                className="text-muted-foreground hover:text-destructive"
+                title="Delete card"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon-xs"
@@ -485,6 +544,36 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto p-5 space-y-6">
+            {/* Deleted Card Banner */}
+            {card.deletedAt && (
+              <div
+                data-role="deleted-card-banner"
+                className="flex items-center justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/10 px-3.5 py-2.5 text-xs text-destructive dark:text-rose-400"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <AlertCircle className="h-4 w-4 shrink-0 text-destructive" />
+                  <div className="min-w-0">
+                    <span className="font-semibold">This card has been deleted</span>
+                    <span className="ml-1.5 text-[11px] opacity-80">
+                      ({new Date(card.deletedAt).toLocaleDateString()})
+                    </span>
+                  </div>
+                </div>
+                {canManageCards && (
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    onClick={() => restoreMutation.mutate()}
+                    disabled={restoreMutation.isPending}
+                    className="h-6 px-2.5 gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/10 cursor-pointer shrink-0"
+                  >
+                    <RotateCcw className="h-3 w-3" />
+                    <span>{restoreMutation.isPending ? 'Restoring...' : 'Restore Card'}</span>
+                  </Button>
+                )}
+              </div>
+            )}
+
             {/* Title Section */}
             <div>
               <label className="text-[11px] font-medium text-muted-foreground">Title</label>
@@ -492,8 +581,11 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 onBlur={handleTitleBlur}
+                disabled={Boolean(card.deletedAt)}
                 onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
-                className="mt-1 h-9 text-base font-semibold border-transparent hover:border-border focus:border-border px-2"
+                className={`mt-1 h-9 text-base font-semibold border-transparent hover:border-border focus:border-border px-2 ${
+                  card.deletedAt ? 'cursor-not-allowed opacity-75' : ''
+                }`}
                 placeholder="Card title..."
               />
             </div>
@@ -505,20 +597,21 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
                   <TagIcon className="h-3.5 w-3.5" />
                   <span>Tags</span>
                 </label>
-                <div className="relative">
-                  <Button
-                    variant="ghost"
-                    size="xs"
-                    onClick={() => setTagPickerOpen(!tagPickerOpen)}
-                    className="h-6 px-2 text-xs text-primary hover:bg-primary/10"
-                  >
-                    <Plus className="h-3 w-3 mr-1" />
-                    <span>Tag</span>
-                  </Button>
+                {!card.deletedAt && (
+                  <div className="relative">
+                    <Button
+                      variant="ghost"
+                      size="xs"
+                      onClick={() => setTagPickerOpen(!tagPickerOpen)}
+                      className="h-6 px-2 text-xs text-primary hover:bg-primary/10"
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      <span>Tag</span>
+                    </Button>
 
                   {/* Tag Selector Popover */}
                   {tagPickerOpen && (
-                    <div className="absolute right-0 top-7 z-50 w-64 rounded-xl border border-border bg-popover p-3 shadow-xl">
+                    <div className="absolute right-0 top-7 z-50 w-72 rounded-xl border border-border bg-popover p-3 shadow-xl">
                       <div className="flex items-center justify-between pb-2 border-b border-border/50">
                         <span className="text-xs font-semibold">Select or Create Tag</span>
                         <Button
@@ -554,8 +647,8 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
                         </div>
                       )}
 
-                      {/* Existing Project Tags */}
-                      <div className="py-2 max-h-36 overflow-y-auto space-y-1">
+                      {/* Existing Project Tags - Compact Tag Cloud */}
+                      <div className="py-2 max-h-44 overflow-y-auto">
                         {projectTags.length === 0 ? (
                           <div className="text-[11px] text-muted-foreground/70 py-1">
                             No tags yet. Create one below.
@@ -571,20 +664,31 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
                                 </div>
                               );
                             }
-                            return filtered.map((tag) => {
-                              const assigned = isTagAssigned(tag.id);
-                              return (
-                                <button
-                                  key={tag.id}
-                                  type="button"
-                                  onClick={() => toggleTag(tag.id)}
-                                  className="flex w-full items-center justify-between rounded-md px-2 py-1 text-left text-xs transition-colors hover:bg-muted/50 cursor-pointer"
-                                >
-                                  <TagBadge tag={tag} size="xs" />
-                                  {assigned && <Check className="h-3.5 w-3.5 text-primary" />}
-                                </button>
-                              );
-                            });
+                            return (
+                              <div
+                                data-role="tag-picker-cloud"
+                                className="flex flex-wrap items-center gap-1.5 py-1"
+                              >
+                                {filtered.map((tag) => {
+                                  const assigned = isTagAssigned(tag.id);
+                                  return (
+                                    <button
+                                      key={tag.id}
+                                      type="button"
+                                      onClick={() => toggleTag(tag.id)}
+                                      className="rounded-md transition-all hover:scale-105 active:scale-95 cursor-pointer focus:outline-none"
+                                      title={
+                                        assigned
+                                          ? `Remove tag "${tag.name}"`
+                                          : `Add tag "${tag.name}"`
+                                      }
+                                    >
+                                      <TagBadge tag={tag} size="xs" selected={assigned} />
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            );
                           })()
                         }
                       </div>
@@ -651,7 +755,8 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
                     </div>
                   )}
                 </div>
-              </div>
+              )}
+            </div>
 
               {/* Assigned Tags List */}
               <div className="mt-2 flex flex-wrap items-center gap-1.5 min-h-[28px]">
@@ -663,7 +768,7 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
                       key={tag.id}
                       tag={tag}
                       size="sm"
-                      onRemove={() => toggleTag(tag.id)}
+                      onRemove={card.deletedAt ? undefined : () => toggleTag(tag.id)}
                     />
                   ))
                 )}
@@ -677,8 +782,9 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
                 <label className="text-[11px] font-medium text-muted-foreground">Lane</label>
                 <select
                   value={card.laneId}
+                  disabled={Boolean(card.deletedAt)}
                   onChange={(e) => moveMutation.mutate(e.target.value)}
-                  className="mt-1 w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="mt-1 w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {lanes.map((l) => (
                     <option key={l.id} value={l.id}>
@@ -693,8 +799,9 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
                 <label className="text-[11px] font-medium text-muted-foreground">Priority</label>
                 <select
                   value={priority}
+                  disabled={Boolean(card.deletedAt)}
                   onChange={(e) => handlePriorityChange(e.target.value as Priority)}
-                  className="mt-1 w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="mt-1 w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {PRIORITIES.map((p) => (
                     <option key={p} value={p}>
@@ -713,8 +820,9 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
                 <Input
                   type="date"
                   value={dueDate}
+                  disabled={Boolean(card.deletedAt)}
                   onChange={(e) => handleDueDateChange(e.target.value)}
-                  className="mt-1 h-8 text-xs"
+                  className="mt-1 h-8 text-xs disabled:opacity-60 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -726,12 +834,13 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
                 </label>
                 <select
                   value={assigneeId}
+                  disabled={Boolean(card.deletedAt)}
                   onChange={(e) => {
                     const newId = e.target.value;
                     setAssigneeId(newId);
                     updateMutation.mutate({ assigneeId: newId || null });
                   }}
-                  className="mt-1 w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+                  className="mt-1 w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <option value="">Unassigned</option>
                   {projectMembers.map((m) => (
@@ -743,28 +852,37 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
               </div>
             </div>
 
-            {/* Card Journey Section */}
-            <CardJourney cardId={card.id} currentLaneName={card?.lane?.name} />
-
             {/* Description Section */}
             <div>
               <label className="text-[11px] font-medium text-muted-foreground">Description</label>
               <Textarea
                 placeholder="Add more details or acceptance criteria..."
                 value={description}
+                disabled={Boolean(card.deletedAt)}
                 onChange={(e) => setDescription(e.target.value)}
                 onBlur={handleDescriptionBlur}
-                className="mt-1.5 min-h-[120px] text-xs resize-none"
+                className="mt-1.5 min-h-[120px] text-xs resize-none disabled:opacity-60 disabled:cursor-not-allowed"
               />
             </div>
 
             {/* Comments Section (Phase 4 Active) */}
             <div className="pt-4 border-t border-border/40">
-              <CommentSection cardId={card.id} projectId={projectId} />
+              <CommentSection cardId={card.id} projectId={projectId} readOnly={Boolean(card.deletedAt)} />
+            </div>
+
+            {/* Card Journey Section */}
+            <div className="pt-4 border-t border-border/40">
+              <div className="flex items-center justify-between pb-2.5">
+                <span className="text-xs font-semibold flex items-center gap-1.5 text-foreground">
+                  <Route className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span>Card Journey</span>
+                </span>
+              </div>
+              <CardJourney cardId={card.id} currentLaneName={card?.lane?.name} />
             </div>
 
             {/* Activity History Section (Phase 6 Active) */}
-            <div className="pt-4 border-t border-border/40">
+            <div data-role="activity-timeline" className="pt-4 border-t border-border/40">
               <div className="flex items-center justify-between pb-3">
                 <span className="text-xs font-semibold flex items-center gap-1.5 text-foreground">
                   <History className="h-3.5 w-3.5 text-muted-foreground" />
@@ -802,6 +920,52 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
               disabled={deleteMutation.isPending}
             >
               {deleteMutation.isPending ? 'Deleting...' : 'Delete Card'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Share Deleted Card Dialog */}
+      <Dialog open={shareDeletedModalOpen} onOpenChange={setShareDeletedModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-amber-500" />
+              <span>Card is Deleted</span>
+            </DialogTitle>
+            <DialogDescription className="pt-2 text-sm text-muted-foreground">
+              This card has been deleted. In order for others to access it, you have to restore it first.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 flex sm:justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShareDeletedModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              disabled={restoreMutation.isPending}
+              onClick={() => {
+                restoreMutation.mutate(undefined, {
+                  onSuccess: () => {
+                    setShareDeletedModalOpen(false);
+                    const projectSlug = useBoardStore.getState().currentProject?.slug;
+                    const projectIdentifier = projectSlug || projectId;
+                    const url = `${window.location.origin}/projects/${projectIdentifier}?cardId=${selectedCardId}`;
+                    if (navigator.clipboard) {
+                      navigator.clipboard.writeText(url);
+                      toast.success('Card restored & link copied to clipboard!');
+                    }
+                  },
+                });
+              }}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              {restoreMutation.isPending ? 'Restoring...' : 'Restore Card'}
             </Button>
           </DialogFooter>
         </DialogContent>

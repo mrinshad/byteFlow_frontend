@@ -1,15 +1,23 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Calendar, MessageSquare, RotateCcw, Share2, User } from 'lucide-react';
+import { Calendar, MessageSquare, RotateCcw, Share2, User, AlertCircle } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { api, type Card, type Priority, type ProjectMember } from '@/lib/api';
 import { useBoardStore } from '@/lib/store/use-board-store';
 import { TagBadge } from '@/components/tags/tag-badge';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { isDoneLane } from '@/lib/utils';
 
 interface CardItemProps {
@@ -88,6 +96,8 @@ export function CardItem({ card, isDone }: CardItemProps) {
     },
   });
 
+  const [shareDeletedOpen, setShareDeletedOpen] = useState(false);
+
   const {
     attributes,
     listeners,
@@ -132,6 +142,7 @@ export function CardItem({ card, isDone }: CardItemProps) {
       {...attributes}
       {...listeners}
       data-role="card-item"
+      data-card-id={card.id}
       onClick={() => openCardDrawer(card.id)}
       className={`group relative flex flex-col gap-2 rounded-lg border p-3 shadow-xs transition-all duration-150 cursor-pointer select-none touch-pan-y ${
         isDeleted
@@ -139,14 +150,14 @@ export function CardItem({ card, isDone }: CardItemProps) {
           : 'border-border/70 bg-card hover:border-border hover:shadow-sm'
       } ${isDragging ? 'opacity-30 ring-2 ring-primary/50' : ''}`}
     >
-      {/* Header: Deleted Banner or Tag Badges & Share Option */}
-      <div className="flex items-center justify-between gap-1.5 flex-wrap">
+      {/* Header: Deleted Banner or Tag Badges & Actions */}
+      <div className="flex items-center justify-between gap-2 min-h-[24px]">
         {isDeleted ? (
-          <span className="rounded bg-rose-500/10 px-1.5 py-0.5 text-[9px] font-bold text-rose-500 uppercase tracking-wider border border-rose-500/20">
+          <span className="rounded bg-rose-500/10 px-1.5 py-0.5 text-[9px] font-bold text-rose-500 uppercase tracking-wider border border-rose-500/20 shrink-0">
             Deleted / Archived
           </span>
         ) : tags.length > 0 ? (
-          <div className="flex flex-wrap items-center gap-1">
+          <div className="flex flex-wrap items-center gap-1 overflow-hidden">
             {tags.map((tag) => (
               <TagBadge key={tag.id} tag={tag} size="xs" />
             ))}
@@ -155,12 +166,16 @@ export function CardItem({ card, isDone }: CardItemProps) {
           <div />
         )}
 
-        <div className="flex items-center gap-1 ml-auto">
+        <div className="flex items-center gap-1.5 shrink-0 ml-auto">
           <Button
             size="icon-xs"
             variant="ghost"
             onClick={(e) => {
               e.stopPropagation();
+              if (isDeleted) {
+                setShareDeletedOpen(true);
+                return;
+              }
               const projectSlug = useBoardStore.getState().currentProject?.slug;
               const projectIdentifier = projectSlug || card.projectId;
               const shareUrl = `${origin}/projects/${projectIdentifier}?cardId=${card.id}`;
@@ -169,23 +184,25 @@ export function CardItem({ card, isDone }: CardItemProps) {
                 toast.success('Card link copied to clipboard!');
               }
             }}
-            className="h-5 w-5 text-muted-foreground hover:text-foreground opacity-60 hover:opacity-100 transition-opacity"
-            title="Share card link"
+            className="h-6 w-6 text-muted-foreground hover:text-foreground opacity-75 hover:opacity-100 transition-opacity"
+            title={isDeleted ? 'Cannot share deleted card' : 'Share card link'}
+            data-role="share-card-button"
           >
-            <Share2 className="h-3 w-3" />
+            <Share2 className="h-3.5 w-3.5" />
           </Button>
 
           {isDeleted && (
             <Button
-              size="icon-xs"
-              variant="ghost"
+              size="xs"
+              variant="outline"
               onClick={(e) => {
                 e.stopPropagation();
                 restoreMutation.mutate();
               }}
               disabled={restoreMutation.isPending}
-              className="h-5 px-1.5 gap-1 text-[10px] font-semibold text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+              className="h-6 px-2 gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10 hover:text-emerald-700"
               title="Restore deleted card"
+              data-role="restore-card-button"
             >
               <RotateCcw className="h-3 w-3" />
               <span>Restore</span>
@@ -263,6 +280,60 @@ export function CardItem({ card, isDone }: CardItemProps) {
           )}
         </div>
       </div>
+
+      {/* Share Deleted Card Dialog */}
+      <Dialog open={shareDeletedOpen} onOpenChange={setShareDeletedOpen}>
+        <DialogContent
+          className="sm:max-w-md"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-amber-500" />
+              <span>Card is Deleted</span>
+            </DialogTitle>
+            <DialogDescription className="pt-2 text-sm text-muted-foreground">
+              This card has been deleted. In order for others to access it, you have to restore it first.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 flex sm:justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShareDeletedOpen(false);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              disabled={restoreMutation.isPending}
+              onClick={(e) => {
+                e.stopPropagation();
+                restoreMutation.mutate(undefined, {
+                  onSuccess: () => {
+                    setShareDeletedOpen(false);
+                    const projectSlug = useBoardStore.getState().currentProject?.slug;
+                    const projectIdentifier = projectSlug || card.projectId;
+                    const shareUrl = `${origin}/projects/${projectIdentifier}?cardId=${card.id}`;
+                    if (navigator.clipboard?.writeText) {
+                      navigator.clipboard.writeText(shareUrl);
+                      toast.success('Card restored & link copied to clipboard!');
+                    }
+                  },
+                });
+              }}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              {restoreMutation.isPending ? 'Restoring...' : 'Restore Card'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

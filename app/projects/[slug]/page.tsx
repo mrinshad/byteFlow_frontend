@@ -20,16 +20,52 @@ import { ProjectMembersSection } from '@/components/projects/project-members-sec
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
-function CardUrlSync() {
+import { toast } from 'sonner';
+
+function CardUrlSync({ projectSlug }: { projectSlug?: string }) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const openCardDrawer = useBoardStore((state) => state.openCardDrawer);
+  const closeCardDrawer = useBoardStore((state) => state.closeCardDrawer);
 
   useEffect(() => {
     const cardId = searchParams.get('cardId');
-    if (cardId) {
-      openCardDrawer(cardId);
-    }
-  }, [searchParams, openCardDrawer]);
+    if (!cardId) return;
+
+    let isMounted = true;
+
+    const checkAndOpen = async () => {
+      try {
+        const res = await api.cards.getById(cardId);
+        const card = res.data;
+        if (!isMounted) return;
+
+        if (!card) {
+          closeCardDrawer();
+          toast.error('Card not available');
+          const cleanUrl = projectSlug ? `/projects/${projectSlug}` : window.location.pathname;
+          router.replace(cleanUrl);
+        } else {
+          openCardDrawer(cardId);
+          if (card.deletedAt) {
+            toast.warning('This card has been deleted');
+          }
+        }
+      } catch {
+        if (!isMounted) return;
+        closeCardDrawer();
+        toast.error('Card not available');
+        const cleanUrl = projectSlug ? `/projects/${projectSlug}` : window.location.pathname;
+        router.replace(cleanUrl);
+      }
+    };
+
+    checkAndOpen();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [searchParams, openCardDrawer, closeCardDrawer, router, projectSlug]);
 
   return null;
 }
@@ -43,7 +79,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ slug: 
   const [activityOpen, setActivityOpen] = useState(false);
   const [insightsOpen, setInsightsOpen] = useState(false);
 
-  const canManageCards = user?.role === 'ADMIN' || user?.role === 'MANAGER';
+  const canManageCards = user?.role === 'ADMIN' || user?.role === 'MANAGER' || user?.role === 'SUPER_ADMIN';
 
   const { data: projectData, isLoading: projectLoading, error: projectError } = useQuery({
     queryKey: ['project', identifier],
@@ -84,7 +120,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ slug: 
   return (
     <AuthGuard>
       <Suspense fallback={null}>
-        <CardUrlSync />
+        <CardUrlSync projectSlug={project?.slug || identifier} />
       </Suspense>
       <div className="min-h-screen bg-background flex flex-col w-full max-w-full overflow-x-clip">
         <Navbar />

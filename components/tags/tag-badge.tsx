@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { X } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 import type { Tag } from '@/lib/api';
 
 interface TagBadgeProps {
@@ -9,9 +9,16 @@ interface TagBadgeProps {
   onRemove?: () => void;
   className?: string;
   size?: 'xs' | 'sm';
+  selected?: boolean;
 }
 
-export function TagBadge({ tag, onRemove, className = '', size = 'xs' }: TagBadgeProps) {
+export function TagBadge({
+  tag,
+  onRemove,
+  className = '',
+  size = 'xs',
+  selected,
+}: TagBadgeProps) {
   const color = tag.color || '#6366f1';
 
   const isSmall = size === 'xs';
@@ -20,17 +27,27 @@ export function TagBadge({ tag, onRemove, className = '', size = 'xs' }: TagBadg
     <span
       className={`inline-flex items-center gap-1 rounded-md font-medium transition-colors select-none ${
         isSmall ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-0.5 text-xs'
-      } ${className}`}
+      } ${selected ? 'font-semibold shadow-2xs' : ''} ${className}`}
       style={{
-        backgroundColor: `${color}18`,
+        backgroundColor: selected ? `${color}26` : `${color}18`,
         color: color,
-        border: `1px solid ${color}35`,
+        border: `1px solid ${color}${selected ? '60' : '35'}`,
       }}
     >
-      <span
-        className="h-1.5 w-1.5 rounded-full shrink-0"
-        style={{ backgroundColor: color }}
-      />
+      {selected ? (
+        <Check
+          className={
+            isSmall
+              ? 'h-2.5 w-2.5 shrink-0 stroke-[2.5]'
+              : 'h-3 w-3 shrink-0 stroke-[2.5]'
+          }
+        />
+      ) : (
+        <span
+          className="h-1.5 w-1.5 rounded-full shrink-0"
+          style={{ backgroundColor: color }}
+        />
+      )}
       <span className="truncate max-w-[120px]">{tag.name}</span>
       {onRemove && (
         <button

@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 interface CommentSectionProps {
   cardId: string;
   projectId: string;
+  readOnly?: boolean;
 }
 
 function isCommentAuthor(
@@ -33,7 +34,7 @@ function isCommentAuthor(
   );
 }
 
-export function CommentSection({ cardId, projectId }: CommentSectionProps) {
+export function CommentSection({ cardId, projectId, readOnly = false }: CommentSectionProps) {
   const { user: currentUser } = useAuth();
   const [newComment, setNewComment] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -268,7 +269,7 @@ export function CommentSection({ cardId, projectId }: CommentSectionProps) {
                       <span className="text-[10px] text-muted-foreground shrink-0">{formatTimestamp(c.createdAt)}</span>
                     </div>
 
-                    {!isEditingThis && isAuthor && (
+                    {!isEditingThis && isAuthor && !readOnly && (
                       <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 shrink-0">
                         <Button
                           variant="ghost"
@@ -340,64 +341,70 @@ export function CommentSection({ cardId, projectId }: CommentSectionProps) {
       </div>
 
       {/* New Comment Composer with Autocomplete */}
-      <form onSubmit={handleCreateSubmit} className="relative flex flex-col gap-2">
-        {/* Autocomplete Popup */}
-        {mentionQuery !== null && filteredMembers.length > 0 && (
-          <div className="absolute bottom-full mb-1 left-0 w-64 rounded-lg border border-border bg-popover p-1 shadow-md z-50 animate-in fade-in-0 slide-in-from-bottom-2">
-            <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/40">
-              Mention Team Member
-            </div>
-            <div className="max-h-40 overflow-y-auto">
-              {filteredMembers.map((m) => (
-                <button
-                  key={m.userId}
-                  type="button"
-                  onClick={() => m.user?.username && handleSelectMention(m.user.username)}
-                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs hover:bg-muted/80 transition-colors cursor-pointer"
-                >
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[9px] font-bold text-primary">
-                    {m.user?.name.charAt(0).toUpperCase()}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold text-foreground">{m.user?.name}</p>
-                    <p className="truncate text-[10px] text-muted-foreground">@{m.user?.username}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <Textarea
-          ref={textareaRef}
-          placeholder="Write a comment... (Type @ to mention team members)"
-          value={newComment}
-          onChange={handleTextChange}
-          onKeyDown={handleKeyDown}
-          disabled={createMutation.isPending}
-          className="min-h-[64px] text-xs resize-none"
-        />
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] text-muted-foreground flex items-center gap-1.5">
-            <CornerDownLeft className="h-3 w-3" />
-            <span>Cmd + Enter to post</span>
-            <span className="text-muted-foreground/50">•</span>
-            <span className="flex items-center gap-0.5 text-primary">
-              <AtSign className="h-3 w-3" />
-              <span>@mention</span>
-            </span>
-          </span>
-          <Button
-            type="submit"
-            size="sm"
-            disabled={createMutation.isPending || !newComment.trim()}
-            className="gap-1.5 h-7 px-3 text-xs"
-          >
-            <Send className="h-3 w-3" />
-            <span>{createMutation.isPending ? 'Posting...' : 'Comment'}</span>
-          </Button>
+      {readOnly ? (
+        <div className="rounded-lg border border-dashed border-border/60 bg-muted/15 py-2.5 px-3 text-center text-xs text-muted-foreground">
+          Comments are disabled on deleted cards.
         </div>
-      </form>
+      ) : (
+        <form onSubmit={handleCreateSubmit} className="relative flex flex-col gap-2">
+          {/* Autocomplete Popup */}
+          {mentionQuery !== null && filteredMembers.length > 0 && (
+            <div className="absolute bottom-full mb-1 left-0 w-64 rounded-lg border border-border bg-popover p-1 shadow-md z-50 animate-in fade-in-0 slide-in-from-bottom-2">
+              <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/40">
+                Mention Team Member
+              </div>
+              <div className="max-h-40 overflow-y-auto">
+                {filteredMembers.map((m) => (
+                  <button
+                    key={m.userId}
+                    type="button"
+                    onClick={() => m.user?.username && handleSelectMention(m.user.username)}
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs hover:bg-muted/80 transition-colors cursor-pointer"
+                  >
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[9px] font-bold text-primary">
+                      {m.user?.name.charAt(0).toUpperCase()}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold text-foreground">{m.user?.name}</p>
+                      <p className="truncate text-[10px] text-muted-foreground">@{m.user?.username}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <Textarea
+            ref={textareaRef}
+            placeholder="Write a comment... (Type @ to mention team members)"
+            value={newComment}
+            onChange={handleTextChange}
+            onKeyDown={handleKeyDown}
+            disabled={createMutation.isPending}
+            className="min-h-[64px] text-xs resize-none"
+          />
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-muted-foreground flex items-center gap-1.5">
+              <CornerDownLeft className="h-3 w-3" />
+              <span>Cmd + Enter to post</span>
+              <span className="text-muted-foreground/50">•</span>
+              <span className="flex items-center gap-0.5 text-primary">
+                <AtSign className="h-3 w-3" />
+                <span>@mention</span>
+              </span>
+            </span>
+            <Button
+              type="submit"
+              size="sm"
+              disabled={createMutation.isPending || !newComment.trim()}
+              className="gap-1.5 h-7 px-3 text-xs"
+            >
+              <Send className="h-3 w-3" />
+              <span>{createMutation.isPending ? 'Posting...' : 'Comment'}</span>
+            </Button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }

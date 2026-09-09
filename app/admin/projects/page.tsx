@@ -38,8 +38,8 @@ export default function AdminProjectsPage() {
   const [deletingProject, setDeletingProject] = useState<any | null>(null);
 
   const { data: projectsData, isLoading } = useQuery({
-    queryKey: ['admin', 'projects', { includeDeleted: true }],
-    queryFn: () => api.admin.getProjects({ includeDeleted: true }),
+    queryKey: ['admin', 'projects', { includeDeleted: showDeleted }],
+    queryFn: () => api.admin.getProjects({ includeDeleted: showDeleted }),
   });
 
   const restoreMutation = useMutation({
