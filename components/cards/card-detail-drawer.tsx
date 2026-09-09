@@ -20,6 +20,7 @@ import { api, type Card, type Priority, type Lane, type Tag } from '@/lib/api';
 import { useDebounce } from '@/lib/hooks/use-debounce';
 import { useBoardStore } from '@/lib/store/use-board-store';
 import { CommentSection } from '@/components/cards/comment-section';
+import { CardJourney } from '@/components/cards/card-journey';
 import { TagBadge } from '@/components/tags/tag-badge';
 import { ActivityTimeline } from '@/components/activities/activity-timeline';
 import { Button } from '@/components/ui/button';
@@ -427,6 +428,7 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
         role="dialog"
         aria-modal="true"
         aria-label="Card Details"
+        data-role="card-detail-drawer"
         className="fixed inset-y-0 right-0 z-50 flex w-full max-w-lg flex-col border-l border-border bg-background shadow-2xl transition-transform duration-200"
       >
         {/* Drawer Header */}
@@ -740,6 +742,9 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
                 </select>
               </div>
             </div>
+
+            {/* Card Journey Section */}
+            <CardJourney cardId={card.id} currentLaneName={card?.lane?.name} />
 
             {/* Description Section */}
             <div>
