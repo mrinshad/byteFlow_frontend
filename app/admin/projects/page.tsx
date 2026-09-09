@@ -17,6 +17,7 @@ import {
   EyeOff,
 } from 'lucide-react';
 import { api, type AdminProject } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 import { useDebounce } from '@/lib/hooks/use-debounce';
 import { AssignMembersDialog } from '@/components/admin/assign-members-dialog';
 import { CreateProjectDialog } from '@/components/projects/create-project-dialog';
@@ -26,6 +27,8 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function AdminProjectsPage() {
+  const { user: currentUser } = useAuth();
+  const isSuperAdmin = currentUser?.role === 'SUPER_ADMIN';
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 250);
@@ -52,7 +55,13 @@ export default function AdminProjectsPage() {
     },
   });
 
-  const allProjects = projectsData?.data || [];
+  const rawProjects = projectsData?.data || [];
+  const allProjects = rawProjects.map((p) => ({
+    ...p,
+    members: isSuperAdmin
+      ? p.members
+      : p.members.filter((m) => m.user?.role !== 'SUPER_ADMIN' && (m as any).role !== 'SUPER_ADMIN'),
+  }));
   const activeProjects = allProjects.filter((p) => !p.isDeleted);
   const deletedProjects = allProjects.filter((p) => p.isDeleted);
 

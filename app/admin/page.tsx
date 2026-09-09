@@ -16,10 +16,14 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function AdminDashboardPage() {
+  const { user: currentUser } = useAuth();
+  const isSuperAdmin = currentUser?.role === 'SUPER_ADMIN';
+
   const { data: statsData, isLoading: statsLoading } = useQuery({
     queryKey: ['admin', 'stats'],
     queryFn: () => api.admin.getStats(),
@@ -31,7 +35,13 @@ export default function AdminDashboardPage() {
   });
 
   const stats = statsData?.data;
-  const projects = projectsData?.data || [];
+  const rawProjects = projectsData?.data || [];
+  const projects = rawProjects.map((p) => ({
+    ...p,
+    members: isSuperAdmin
+      ? p.members
+      : p.members.filter((m) => m.user?.role !== 'SUPER_ADMIN' && (m as any).role !== 'SUPER_ADMIN'),
+  }));
 
   return (
     <div className="space-y-8">

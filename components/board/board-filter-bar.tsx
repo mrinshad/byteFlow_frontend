@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Search, X, Filter, RotateCcw } from 'lucide-react';
 import { api, type Priority, type Tag, type ProjectMember } from '@/lib/api';
@@ -47,21 +47,35 @@ export function BoardFilterBar({ projectId }: BoardFilterBarProps) {
   const [inputValue, setInputValue] = useState(search);
   const debouncedSearch = useDebounce(inputValue, 300);
 
-  // Sync debounced search to store filter
+  const prevSearchRef = useRef(search);
+
+  // Sync debounced search to store filter (instant when input is emptied)
   useEffect(() => {
-    if (debouncedSearch !== search) {
+    if (inputValue === '') {
+      if (search !== '') {
+        setSearch('');
+        prevSearchRef.current = '';
+      }
+    } else if (debouncedSearch !== search) {
       setSearch(debouncedSearch);
+      prevSearchRef.current = debouncedSearch;
     }
-  }, [debouncedSearch, setSearch, search]);
+  }, [debouncedSearch, inputValue, search, setSearch]);
 
   // Sync external changes to store search (e.g. resetFilters) to local input
   useEffect(() => {
-    setInputValue(search);
-  }, [search]);
+    if (prevSearchRef.current !== search) {
+      prevSearchRef.current = search;
+      if (search !== inputValue) {
+        setInputValue(search);
+      }
+    }
+  }, [search, inputValue]);
 
   const handleClearSearch = () => {
     setInputValue('');
     setSearch('');
+    prevSearchRef.current = '';
   };
 
   // Fetch project tags for dropdown
@@ -84,7 +98,17 @@ export function BoardFilterBar({ projectId }: BoardFilterBarProps) {
 
   const tags = tagsData?.data || [];
   const cards = cardsData?.data || [];
-  const members = projectData?.data?.members || [];
+  const rawMembers = (projectData?.data?.members || []) as ProjectMember[];
+  const members = rawMembers.filter(
+    (m) => m.user?.role !== 'SUPER_ADMIN'
+  );
+
+  const superAdminUserIds = new Set(
+    rawMembers
+      .filter((m) => m.user?.role === 'SUPER_ADMIN')
+      .map((m) => m.userId || m.user?.id)
+      .filter(Boolean)
+  );
 
   const getAssigneeLabel = (id: string) => {
     const member = members.find((m: ProjectMember) => m.userId === id || m.user?.id === id);
@@ -93,10 +117,10 @@ export function BoardFilterBar({ projectId }: BoardFilterBarProps) {
     return id;
   };
 
-  // Extract unique active assignees from project cards
+  // Extract unique active assignees from project cards (excluding superadmin)
   const assignees = Array.from(
     new Set(cards.map((c) => c.assigneeId).filter(Boolean) as string[])
-  );
+  ).filter((id) => !superAdminUserIds.has(id));
 
   const hasActiveFilters =
     Boolean(search.trim()) ||

@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Send, Edit2, Trash2, Check, X, MessageSquare, CornerDownLeft, AtSign } from 'lucide-react';
 import { toast } from 'sonner';
 import { api, type Comment } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -13,7 +14,27 @@ interface CommentSectionProps {
   projectId: string;
 }
 
+function isCommentAuthor(
+  commentCreatedBy: string | null | undefined,
+  user: { id?: string; name?: string; username?: string } | null | undefined
+): boolean {
+  if (!commentCreatedBy || !user) return false;
+  const authorNorm = commentCreatedBy.trim().toLowerCase();
+  const userNameNorm = user.name?.trim().toLowerCase();
+  const userUsernameNorm = user.username?.trim().toLowerCase();
+  const userMentionNorm = `@${userUsernameNorm}`;
+  const userIdNorm = user.id?.trim().toLowerCase();
+
+  return (
+    Boolean(userNameNorm && authorNorm === userNameNorm) ||
+    Boolean(userUsernameNorm && authorNorm === userUsernameNorm) ||
+    Boolean(userMentionNorm && authorNorm === userMentionNorm) ||
+    Boolean(userIdNorm && authorNorm === userIdNorm)
+  );
+}
+
 export function CommentSection({ cardId, projectId }: CommentSectionProps) {
+  const { user: currentUser } = useAuth();
   const [newComment, setNewComment] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState('');
@@ -230,6 +251,7 @@ export function CommentSection({ cardId, projectId }: CommentSectionProps) {
             const isEditingThis = editingId === c.id;
             const author = c.createdBy || 'Team Member';
             const initials = author.slice(0, 2).toUpperCase();
+            const isAuthor = isCommentAuthor(c.createdBy, currentUser);
 
             return (
               <div key={c.id} className="group flex gap-2.5 rounded-lg border border-border/40 bg-muted/20 p-3 max-w-full overflow-hidden">
@@ -246,7 +268,7 @@ export function CommentSection({ cardId, projectId }: CommentSectionProps) {
                       <span className="text-[10px] text-muted-foreground shrink-0">{formatTimestamp(c.createdAt)}</span>
                     </div>
 
-                    {!isEditingThis && (
+                    {!isEditingThis && isAuthor && (
                       <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 shrink-0">
                         <Button
                           variant="ghost"

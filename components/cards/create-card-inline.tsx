@@ -20,12 +20,29 @@ export function CreateCardInline({ projectId, laneId }: CreateCardInlineProps) {
   const [priority, setPriority] = useState<Priority>('MEDIUM');
   const [showDesc, setShowDesc] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
     if (isOpen && textareaRef.current) {
       textareaRef.current.focus();
     }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    function handleClickOutside(event: MouseEvent) {
+      if (formRef.current && !formRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+        resetState();
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, [isOpen]);
 
   const resetState = () => {
@@ -49,10 +66,8 @@ export function CreateCardInline({ projectId, laneId }: CreateCardInlineProps) {
       queryClient.invalidateQueries({ queryKey: ['lanes', projectId] });
       queryClient.invalidateQueries({ queryKey: ['tags', projectId] });
       queryClient.invalidateQueries({ queryKey: ['project', projectId] });
+      setIsOpen(false);
       resetState();
-      if (textareaRef.current) {
-        textareaRef.current.focus();
-      }
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to create card');
@@ -96,6 +111,7 @@ export function CreateCardInline({ projectId, laneId }: CreateCardInlineProps) {
 
   return (
     <form
+      ref={formRef}
       onSubmit={handleSubmit}
       data-role="create-card-form"
       className="flex flex-col gap-2 rounded-lg border border-border/80 bg-card p-2.5 shadow-xs overflow-hidden mb-1"

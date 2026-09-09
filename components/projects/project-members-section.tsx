@@ -29,7 +29,8 @@ export function ProjectMembersSection({ projectId }: ProjectMembersSectionProps)
     refetchInterval: 30000,
   });
 
-  const members: ProjectMemberSummary[] = data?.data || [];
+  const rawMembers: ProjectMemberSummary[] = data?.data || [];
+  const members = rawMembers.filter((m) => m.role !== 'SUPER_ADMIN');
   const totalBreached = members.reduce((acc, m) => acc + m.breachedCardsCount, 0);
   const totalAssigned = members.reduce((acc, m) => acc + m.assignedCardsCount, 0);
   const hasAnyBreached = totalBreached > 0;
@@ -92,11 +93,20 @@ export function ProjectMembersSection({ projectId }: ProjectMembersSectionProps)
         )}
       </Button>
 
+      {/* Mobile backdrop */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/20 backdrop-blur-xs sm:hidden"
+          onClick={() => setIsOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Popover Section */}
       {isOpen && (
         <div
           data-role="project-members-popover"
-          className="absolute right-0 top-full mt-2 w-84 sm:w-96 rounded-xl border border-border/80 bg-background/95 backdrop-blur-md shadow-2xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150"
+          className="fixed inset-x-3 top-20 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 w-auto sm:w-96 max-w-sm sm:max-w-none mx-auto sm:mx-0 rounded-xl border border-border/80 bg-background/95 backdrop-blur-md shadow-2xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150"
         >
           {/* Section Header */}
           <div className="flex items-center justify-between border-b border-border/50 px-4 py-3 bg-muted/20">
@@ -126,7 +136,7 @@ export function ProjectMembersSection({ projectId }: ProjectMembersSectionProps)
           </div>
 
           {/* Members List */}
-          <div className="max-h-80 overflow-y-auto divide-y divide-border/40 p-1">
+          <div className="max-h-[60vh] sm:max-h-80 overflow-y-auto divide-y divide-border/40 p-1">
             {isLoading ? (
               <div className="p-4 text-center text-xs text-muted-foreground">
                 Loading project members...

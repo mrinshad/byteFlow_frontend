@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useAuth } from '@/lib/auth-context';
 import {
   ShieldCheck,
   Check,
@@ -12,6 +13,8 @@ import {
 } from 'lucide-react';
 
 export default function AdminRolesPage() {
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
   const permissions = [
     {
       name: 'Manage, Lock & Reset Other Administrators',
@@ -106,26 +109,28 @@ export default function AdminRolesPage() {
       </div>
 
       {/* Role Cards */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Super Admin Card */}
-        <div className="rounded-xl border border-purple-500/40 bg-card p-5 shadow-xs relative overflow-hidden">
-          <div className="absolute top-0 right-0 h-16 w-16 bg-purple-500/5 rounded-bl-full pointer-events-none" />
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400">
-              <Crown className="h-5 w-5" />
+      <div className={`grid grid-cols-1 gap-5 sm:grid-cols-2 ${isSuperAdmin ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
+        {/* Super Admin Card (Only visible to Super Admin) */}
+        {isSuperAdmin && (
+          <div className="rounded-xl border border-purple-500/40 bg-card p-5 shadow-xs relative overflow-hidden">
+            <div className="absolute top-0 right-0 h-16 w-16 bg-purple-500/5 rounded-bl-full pointer-events-none" />
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                <Crown className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-foreground">SUPER ADMIN</h2>
+                <span className="text-[10px] font-semibold text-purple-600 dark:text-purple-400 uppercase">Supreme Authority</span>
+              </div>
             </div>
-            <div>
-              <h2 className="text-sm font-bold text-foreground">SUPER ADMIN</h2>
-              <span className="text-[10px] font-semibold text-purple-600 dark:text-purple-400 uppercase">Supreme Authority</span>
+            <p className="mt-3 text-xs text-muted-foreground leading-relaxed">
+              Highest tier governance. Full control over the entire system, including the ability to manage, lock, delete, and reset passwords for other Administrators.
+            </p>
+            <div className="mt-4 pt-3 border-t border-border/40 text-[11px] text-purple-600 dark:text-purple-400 font-semibold">
+              Key: Supreme Control • Admin Governance • Platform Hierarchy
             </div>
           </div>
-          <p className="mt-3 text-xs text-muted-foreground leading-relaxed">
-            Highest tier governance. Full control over the entire system, including the ability to manage, lock, delete, and reset passwords for other Administrators.
-          </p>
-          <div className="mt-4 pt-3 border-t border-border/40 text-[11px] text-purple-600 dark:text-purple-400 font-semibold">
-            Key: Supreme Control • Admin Governance • Platform Hierarchy
-          </div>
-        </div>
+        )}
 
         {/* Admin Card */}
         <div className="rounded-xl border border-primary/40 bg-card p-5 shadow-xs relative overflow-hidden">
@@ -198,7 +203,9 @@ export default function AdminRolesPage() {
             <thead className="border-b border-border/40 bg-muted/40 text-muted-foreground font-semibold uppercase tracking-wider text-[10px]">
               <tr>
                 <th className="px-6 py-3.5 w-2/5">Capability / Operation</th>
-                <th className="px-4 py-3.5 text-center text-purple-600 dark:text-purple-400">SUPER ADMIN</th>
+                {isSuperAdmin && (
+                  <th className="px-4 py-3.5 text-center text-purple-600 dark:text-purple-400">SUPER ADMIN</th>
+                )}
                 <th className="px-4 py-3.5 text-center">ADMIN</th>
                 <th className="px-4 py-3.5 text-center">MANAGER</th>
                 <th className="px-4 py-3.5 text-center">MEMBER</th>
@@ -211,17 +218,19 @@ export default function AdminRolesPage() {
                     <div className="font-bold text-foreground text-xs">{perm.name}</div>
                     <p className="text-[11px] text-muted-foreground mt-0.5">{perm.description}</p>
                   </td>
-                  <td className="px-4 py-4 text-center">
-                    {perm.superAdmin ? (
-                      <div className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400">
-                        <Check className="h-3.5 w-3.5" />
-                      </div>
-                    ) : (
-                      <div className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-muted text-muted-foreground/40">
-                        <X className="h-3.5 w-3.5" />
-                      </div>
-                    )}
-                  </td>
+                  {isSuperAdmin && (
+                    <td className="px-4 py-4 text-center">
+                      {perm.superAdmin ? (
+                        <div className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400">
+                          <Check className="h-3.5 w-3.5" />
+                        </div>
+                      ) : (
+                        <div className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-muted text-muted-foreground/40">
+                          <X className="h-3.5 w-3.5" />
+                        </div>
+                      )}
+                    </td>
+                  )}
                   <td className="px-4 py-4 text-center">
                     {perm.admin ? (
                       <div className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
@@ -274,7 +283,7 @@ export default function AdminRolesPage() {
               </div>
               <div className="flex items-center gap-3 flex-wrap">
                 {([
-                  { label: 'Super Admin', allowed: perm.superAdmin, color: 'purple' },
+                  ...(isSuperAdmin ? [{ label: 'Super Admin', allowed: perm.superAdmin, color: 'purple' }] : []),
                   { label: 'Admin', allowed: perm.admin, color: 'emerald' },
                   { label: 'Manager', allowed: perm.manager, color: 'emerald' },
                   { label: 'Member', allowed: perm.member, color: 'emerald' },

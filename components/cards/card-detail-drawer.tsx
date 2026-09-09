@@ -106,7 +106,10 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
   const card = data?.data;
   const lanes = lanesData?.data || [];
   const projectTags = tagsData?.data || [];
-  const projectMembers = projectData?.data?.members || [];
+  const rawMembers = projectData?.data?.members || [];
+  const projectMembers = rawMembers.filter(
+    (m) => m.user?.role !== 'SUPER_ADMIN'
+  );
 
   const serverTagIds = useMemo(
     () => (card?.tags || []).map((t) => t.tag?.id || t.tagId).filter(Boolean) as string[],
@@ -430,7 +433,7 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
         <div className="flex items-center justify-between border-b border-border/50 px-5 py-3.5">
           <div className="flex items-center gap-2">
             {card?.number && (
-              <span className="flex items-center rounded-md bg-muted/80 px-2 py-1 text-sm font-mono font-bold text-foreground/85">
+              <span className="flex items-center rounded-md bg-muted/80 border border-border/50 px-2.5 py-1 text-sm font-mono font-bold text-muted-foreground">
                 #{card.number}
               </span>
             )}

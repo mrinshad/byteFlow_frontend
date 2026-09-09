@@ -41,7 +41,8 @@ export default function AdminUsersPage() {
     queryFn: () => api.admin.getUsers({ includeDeleted: true }),
   });
 
-  const allUsers = usersData?.data || [];
+  const rawUsers = usersData?.data || [];
+  const allUsers = isSuperAdmin ? rawUsers : rawUsers.filter((u) => u.role !== 'SUPER_ADMIN');
   const activeUsers = allUsers.filter((u) => !u.isDeleted);
   const deactivatedUsers = allUsers.filter((u) => u.isDeleted);
 

@@ -203,11 +203,9 @@ export function CardItem({ card, isDone }: CardItemProps) {
         }`}
       >
         {card.number && (
-          <>
-            <span className="font-mono text-[13px] font-semibold text-foreground/85 mr-1.5 select-none">
-              #{card.number}
-            </span>{' '}
-          </>
+          <span className="inline-flex items-center rounded-md bg-muted/70 px-1.5 py-0.5 text-xs font-mono font-semibold text-muted-foreground/90 border border-border/40 mr-1.5 align-baseline select-none tracking-tight">
+            #{card.number}
+          </span>
         )}
         {card.title}
       </h4>

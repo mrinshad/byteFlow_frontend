@@ -46,7 +46,8 @@ export function AssignMembersDialog({
     enabled: open,
   });
 
-  const allUsers = usersData?.data || [];
+  const rawUsers = usersData?.data || [];
+  const allUsers = rawUsers.filter((u) => u.role !== 'SUPER_ADMIN');
 
   const toggleUser = (userId: string) => {
     setSelectedUserIds((prev) =>
