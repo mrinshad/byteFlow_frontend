@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -23,6 +23,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export default function AdminActivitiesPage() {
   const [page, setPage] = useState(1);
+  const tableRef = useRef<HTMLDivElement>(null);
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    if (tableRef.current) {
+      tableRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      tableRef.current.focus({ preventScroll: true });
+    }
+  };
   const [selectedProject, setSelectedProject] = useState<string>('');
   const [selectedAction, setSelectedAction] = useState<string>('');
   const [search, setSearch] = useState('');
@@ -193,7 +202,11 @@ export default function AdminActivitiesPage() {
       </div>
 
       {/* Activities Table */}
-      <div className="rounded-xl border border-border/60 bg-card shadow-xs overflow-hidden">
+      <div
+        ref={tableRef}
+        tabIndex={-1}
+        className="rounded-xl border border-border/60 bg-card shadow-xs overflow-hidden scroll-mt-24 outline-none"
+      >
         {/* Desktop Table */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs">
@@ -328,9 +341,9 @@ export default function AdminActivitiesPage() {
               <Button
                 variant="outline"
                 size="xs"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                onClick={() => handlePageChange(Math.max(1, page - 1))}
                 disabled={meta.page <= 1 || isLoading}
-                className="h-7 px-2 text-xs"
+                className="h-7 px-2 text-xs cursor-pointer"
               >
                 <ChevronLeft className="h-3.5 w-3.5" />
                 <span>Prev</span>
@@ -338,9 +351,9 @@ export default function AdminActivitiesPage() {
               <Button
                 variant="outline"
                 size="xs"
-                onClick={() => setPage((p) => Math.min(meta.totalPages, p + 1))}
+                onClick={() => handlePageChange(Math.min(meta.totalPages, page + 1))}
                 disabled={meta.page >= meta.totalPages || isLoading}
-                className="h-7 px-2 text-xs"
+                className="h-7 px-2 text-xs cursor-pointer"
               >
                 <span>Next</span>
                 <ChevronRight className="h-3.5 w-3.5" />
