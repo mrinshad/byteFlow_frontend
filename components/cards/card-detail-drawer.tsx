@@ -892,7 +892,7 @@ export function CardDetailDrawer({ projectId }: CardDetailDrawerProps) {
                   <span>Activity History</span>
                 </span>
               </div>
-              <ActivityTimeline cardId={card.id} limit={30} />
+              <ActivityTimeline cardId={card.id} limit={20} />
             </div>
           </div>
         )}

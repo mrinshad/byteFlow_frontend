@@ -39,7 +39,7 @@ export function ProjectActivityDialog({
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto py-4 pr-1">
-          <ActivityTimeline projectId={projectId} limit={100} />
+          <ActivityTimeline projectId={projectId} limit={20} />
         </div>
       </DialogContent>
     </Dialog>

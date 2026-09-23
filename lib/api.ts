@@ -70,10 +70,26 @@ export interface Project {
   deletedAt: string | null;
   deletedBy: string | null;
   members?: ProjectMember[];
+  totalLanes?: number;
+  totalCards?: number;
+  completedCards?: number;
+  completionPercentage?: number;
   _count?: {
     lanes: number;
     cards: number;
     members?: number;
+  };
+}
+
+export interface ActivityListResponse {
+  success: boolean;
+  data: ActivityLog[];
+  meta?: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasMore: boolean;
   };
 }
 
@@ -496,14 +512,38 @@ export const api = {
   },
 
   activities: {
-    listByCard: async (cardId: string, limit?: number): Promise<{ success: boolean; data: ActivityLog[] }> => {
-      const query = limit ? `?limit=${limit}` : '';
-      return request<{ success: boolean; data: ActivityLog[] }>(`/api/activities/card/${cardId}${query}`);
+    listByCard: async (
+      cardId: string,
+      params?: { page?: number; limit?: number } | number
+    ): Promise<ActivityListResponse> => {
+      let query = '';
+      if (typeof params === 'number') {
+        query = `?limit=${params}`;
+      } else if (params) {
+        const qp = new URLSearchParams();
+        if (params.page) qp.set('page', params.page.toString());
+        if (params.limit) qp.set('limit', params.limit.toString());
+        const str = qp.toString();
+        if (str) query = `?${str}`;
+      }
+      return request<ActivityListResponse>(`/api/activities/card/${cardId}${query}`);
     },
 
-    listByProject: async (projectId: string, limit?: number): Promise<{ success: boolean; data: ActivityLog[] }> => {
-      const query = limit ? `?limit=${limit}` : '';
-      return request<{ success: boolean; data: ActivityLog[] }>(`/api/activities/project/${projectId}${query}`);
+    listByProject: async (
+      projectId: string,
+      params?: { page?: number; limit?: number } | number
+    ): Promise<ActivityListResponse> => {
+      let query = '';
+      if (typeof params === 'number') {
+        query = `?limit=${params}`;
+      } else if (params) {
+        const qp = new URLSearchParams();
+        if (params.page) qp.set('page', params.page.toString());
+        if (params.limit) qp.set('limit', params.limit.toString());
+        const str = qp.toString();
+        if (str) query = `?${str}`;
+      }
+      return request<ActivityListResponse>(`/api/activities/project/${projectId}${query}`);
     },
   },
 

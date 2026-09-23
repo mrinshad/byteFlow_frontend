@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useRef, useEffect, useMemo } from 'react';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import {
   PlusCircle,
   ArrowRight,
@@ -16,6 +16,7 @@ import {
   Layers,
   History,
   RotateCcw,
+  Loader2,
 } from 'lucide-react';
 import { api, type ActivityLog } from '@/lib/api';
 
@@ -25,20 +26,85 @@ interface ActivityTimelineProps {
   limit?: number;
 }
 
-export function ActivityTimeline({ cardId, projectId, limit = 50 }: ActivityTimelineProps) {
-  const { data, isLoading } = useQuery({
+export function ActivityTimeline({ cardId, projectId, limit = 20 }: ActivityTimelineProps) {
+  const {
+    data,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useInfiniteQuery({
     queryKey: cardId
       ? ['activities', 'card', cardId]
       : ['activities', 'project', projectId],
-    queryFn: () => {
-      if (cardId) return api.activities.listByCard(cardId, limit);
-      if (projectId) return api.activities.listByProject(projectId, limit);
-      return { success: true, data: [] };
+    queryFn: async ({ pageParam = 1 }) => {
+      if (cardId) return api.activities.listByCard(cardId, { page: pageParam as number, limit });
+      if (projectId) return api.activities.listByProject(projectId, { page: pageParam as number, limit });
+      return { success: true, data: [], meta: { total: 0, page: 1, limit, totalPages: 0, hasMore: false } };
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      if (!lastPage?.meta) return undefined;
+      const { page, totalPages, hasMore } = lastPage.meta;
+      if (typeof hasMore === 'boolean') {
+        return hasMore ? page + 1 : undefined;
+      }
+      return page < totalPages ? page + 1 : undefined;
     },
     enabled: !!cardId || !!projectId,
   });
 
-  const activities = data?.data || [];
+  const activities = useMemo(
+    () => data?.pages.flatMap((page) => page.data) || [],
+    [data]
+  );
+  const totalActivities = data?.pages[0]?.meta?.total ?? activities.length;
+
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const scrollContainer = sentinel.closest('.overflow-y-auto') || null;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (first.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      {
+        root: scrollContainer,
+        rootMargin: '120px',
+        threshold: 0.05,
+      }
+    );
+
+    observer.observe(sentinel);
+
+    const handleScroll = () => {
+      if (!scrollContainer) return;
+      const { scrollTop, scrollHeight, clientHeight } = scrollContainer as HTMLElement;
+      if (scrollTop + clientHeight >= scrollHeight - 120) {
+        if (hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      }
+    };
+
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+    }
+
+    return () => {
+      observer.disconnect();
+      if (scrollContainer) {
+        scrollContainer.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const formatTimestamp = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -205,7 +271,12 @@ export function ActivityTimeline({ cardId, projectId, limit = 50 }: ActivityTime
   };
 
   if (isLoading) {
-    return <div className="py-4 text-center text-xs text-muted-foreground">Loading activity history...</div>;
+    return (
+      <div className="py-8 flex flex-col items-center justify-center gap-2 text-xs text-muted-foreground">
+        <Loader2 className="h-4 w-4 animate-spin text-primary" />
+        <span>Loading activity history...</span>
+      </div>
+    );
   }
 
   if (activities.length === 0) {
@@ -241,6 +312,37 @@ export function ActivityTimeline({ cardId, projectId, limit = 50 }: ActivityTime
           </div>
         );
       })}
+
+      {/* Infinite Scroll Sentinel */}
+      {hasNextPage && <div ref={sentinelRef} className="h-4 w-full" />}
+
+      {/* Loading More Spinner */}
+      {isFetchingNextPage && (
+        <div className="py-2.5 flex items-center justify-center gap-2 text-xs text-muted-foreground animate-in fade-in duration-200">
+          <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+          <span>Loading older activities...</span>
+        </div>
+      )}
+
+      {/* Manual Fallback Button (visible if user stops scrolling or observer didn't trigger) */}
+      {hasNextPage && !isFetchingNextPage && (
+        <div className="pt-1 text-center">
+          <button
+            type="button"
+            onClick={() => fetchNextPage()}
+            className="text-xs text-muted-foreground hover:text-foreground hover:underline transition-colors py-1 px-3 rounded cursor-pointer"
+          >
+            Load older activities
+          </button>
+        </div>
+      )}
+
+      {/* End of Activity Log Indicator */}
+      {!hasNextPage && activities.length > 0 && (
+        <div className="py-3 text-center text-[11px] text-muted-foreground/60 border-t border-dashed border-border/40 mt-3">
+          All {totalActivities} {totalActivities === 1 ? 'activity' : 'activities'} loaded
+        </div>
+      )}
     </div>
   );
 }
